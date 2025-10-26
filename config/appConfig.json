@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "locale": "zh-CN",
+  "baseIntervalMinutes": 1,
+  "reminders": {
+    "progress": {
+      "enabled": true,
+      "defaultIntervalMinutes": 25,
+      "cooldownMinutes": 5,
+      "triggers": [
+        { "id": "focus25", "type": "timeElapsed", "thresholdMinutes": 25 }
+      ],
+      "messages": [
+        { "id": "focus-1", "text": "已经专注 25 分钟啦，坚持就有收获！", "weight": 2 },
+        { "id": "focus-2", "text": "我一直在这陪着你，一起挣钱呀~" }
+      ]
+    },
+    "income": {
+      "enabled": true,
+      "defaultIntervalMinutes": 45,
+      "triggers": [
+        { "id": "income45", "type": "timeElapsed", "thresholdMinutes": 45 }
+      ],
+      "incomeConfig": {
+        "hourlyRate": 64,
+        "currency": "CNY",
+        "workdayStart": "09:00",
+        "workdayEnd": "18:00",
+        "ignoreBreaks": false
+      },
+      "messages": [
+        { "id": "income-1", "text": "按当前节奏，今天已经赚到约 ¥{{income}} 啦！" },
+        { "id": "income-2", "text": "小账本更新：当前累计收益 ¥{{income}}，继续保持！" }
+      ]
+    },
+    "wellness": {
+      "enabled": true,
+      "defaultIntervalMinutes": 60,
+      "triggers": [
+        { "id": "work60", "type": "timeElapsed", "thresholdMinutes": 60 }
+      ],
+      "messages": [
+        { "id": "wellness-1", "text": "感觉你已经坐了挺久，要不要出去散个步？" },
+        { "id": "wellness-2", "text": "补充点水分吧，一会继续干！" }
+      ]
+    },
+    "surprise": {
+      "enabled": true,
+      "defaultIntervalMinutes": 120,
+      "randomStrategy": {
+        "minIntervalMinutes": 90,
+        "maxIntervalMinutes": 150,
+        "probability": 0.15
+      },
+      "triggers": [],
+      "messages": [
+        { "id": "surprise-1", "text": "抽个一分钟做 5 次深呼吸，我来数！" },
+        { "id": "surprise-2", "text": "今天有没有新的灵感？记下来我帮你守护。" }
+      ]
+    }
+  }
+}
