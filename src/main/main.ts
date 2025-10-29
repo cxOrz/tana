@@ -1,9 +1,10 @@
 import { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage } from 'electron';
 import { join } from 'path';
-import { loadAppConfig } from './config';
+import { loadAppConfig, saveAppConfig, type AppConfig } from './config';
 import { ReminderScheduler } from './reminderScheduler';
 
 let mainWindow: BrowserWindow | null = null;
+let configWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuitting = false;
 let reminderScheduler: ReminderScheduler | null = null;
@@ -19,6 +20,29 @@ const resolveRendererEntry = (): string | null => {
     process.env.MAIN_WINDOW_VITE_DEV_SERVER_URL ??
     null
   );
+};
+
+const loadRendererPage = (window: BrowserWindow, page: 'main' | 'config'): void => {
+  const devServerUrl = resolveRendererEntry();
+  const hash = page === 'config' ? '/config' : '/';
+
+  if (devServerUrl) {
+    const url = new URL(devServerUrl);
+    url.hash = hash;
+    window.loadURL(url.toString());
+    return;
+  }
+
+  if (!app.isPackaged) {
+    const url = new URL('http://localhost:5173/');
+    url.hash = hash;
+    window.loadURL(url.toString());
+    return;
+  }
+
+  const indexPath = join(__dirname, '../renderer/index.html');
+  const hashOption = page === 'config' ? 'config' : undefined;
+  window.loadFile(indexPath, hashOption ? { hash: hashOption } : undefined);
 };
 
 function createWindow(): BrowserWindow {
@@ -71,17 +95,57 @@ function createWindow(): BrowserWindow {
     mainWindow?.show();
   });
 
-  const devServerUrl = resolveRendererEntry();
-  if (devServerUrl) {
-    // Electron Forge/Vite 在开发模式下注入地址，可避免硬编码端口。
-    mainWindow.loadURL(devServerUrl);
-  } else if (!app.isPackaged) {
-    mainWindow.loadURL('http://localhost:5173');
-  } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
-  }
+  loadRendererPage(mainWindow, 'main');
 
   return mainWindow;
+}
+
+function createConfigWindow(): BrowserWindow {
+  if (configWindow) {
+    return configWindow;
+  }
+
+  configWindow = new BrowserWindow({
+    width: 960,
+    height: 720,
+    minWidth: 840,
+    minHeight: 600,
+    show: false,
+    autoHideMenuBar: false,
+    resizable: true,
+    backgroundColor: '#0f172aff',
+    webPreferences: {
+      preload: join(__dirname, 'preload.js'),
+      sandbox: false,
+      nodeIntegration: false,
+      contextIsolation: true,
+      backgroundThrottling: false
+    }
+  });
+
+  configWindow.on('closed', () => {
+    configWindow = null;
+  });
+
+  loadRendererPage(configWindow, 'config');
+
+  configWindow.once('ready-to-show', () => {
+    configWindow?.show();
+    configWindow?.focus();
+  });
+
+  return configWindow;
+}
+
+function openConfigWindow(): void {
+  const window = createConfigWindow();
+  if (window.isDestroyed()) {
+    return;
+  }
+  if (!window.isVisible()) {
+    window.show();
+  }
+  window.focus();
 }
 
 function createTray(): void {
@@ -108,6 +172,12 @@ function createTray(): void {
     {
       label: '显示/隐藏窗口',
       click: toggleWindow
+    },
+    {
+      label: '打开配置窗口',
+      click: () => {
+        openConfigWindow();
+      }
     },
     { type: 'separator' },
     {
@@ -167,6 +237,27 @@ ipcMain.handle('execute-command', async (_, command: string) => {
     console.error('Execute command failed:', error);
     throw error;
   }
+});
+
+ipcMain.handle('config:load', async () => {
+  const config = await loadAppConfig();
+  return config;
+});
+
+ipcMain.handle('config:save', async (_event, config: AppConfig) => {
+  const persisted = await saveAppConfig(config);
+
+  try {
+    ensureScheduler().start(persisted);
+  } catch (error) {
+    console.error('[config] 更新调度器失败', error);
+  }
+
+  return persisted;
+});
+
+ipcMain.handle('config:open', async () => {
+  openConfigWindow();
 });
 
 async function initializeReminderScheduler(): Promise<void> {

@@ -1,9 +1,13 @@
 declare global {
   import type { ReminderPayload } from '../shared';
+  import type { AppConfig } from '../shared';
 
   interface Window {
     electronAPI: {
       executeCommand: (command: string) => Promise<any>;
+      loadAppConfig: () => Promise<AppConfig>;
+      saveAppConfig: (config: AppConfig) => Promise<AppConfig>;
+      openConfigWindow: () => Promise<void>;
       onReminder: (callback: (payload: ReminderPayload) => void) => () => void;
     };
   }

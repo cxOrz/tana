@@ -10,7 +10,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "rootDir": "src/main"
   },
   "include": ["src/main/**/*"],
   "exclude": ["src/renderer", "node_modules", "dist"]

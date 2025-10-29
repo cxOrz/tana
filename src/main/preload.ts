@@ -1,9 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { ReminderPayload } from '../shared';
+import type { AppConfig, ReminderPayload } from '../shared';
 
 // 暴露给渲染进程的API
 const electronAPI = {
   executeCommand: (command: string) => ipcRenderer.invoke('execute-command', command),
+  loadAppConfig: (): Promise<AppConfig> => ipcRenderer.invoke('config:load'),
+  saveAppConfig: (config: AppConfig): Promise<AppConfig> => ipcRenderer.invoke('config:save', config),
+  openConfigWindow: (): Promise<void> => ipcRenderer.invoke('config:open'),
   onReminder: (callback: (payload: ReminderPayload) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, payload: ReminderPayload) => callback(payload);
     ipcRenderer.on('reminder:push', listener);

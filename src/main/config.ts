@@ -2,59 +2,23 @@ import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import rawDefaultConfig from '../../config/appConfig.json';
-import type { ReminderModuleKey } from '../shared';
+import type {
+  AppConfig,
+  IncomeReminderModule,
+  ReminderMessage,
+  ReminderModule,
+  SurpriseModule,
+  TriggerConfig
+} from '../shared';
 
-export interface AppConfig {
-  version: string;
-  locale: string;
-  baseIntervalMinutes: number;
-  reminders: ReminderConfigMap;
-}
-
-export type ReminderConfigMap = Record<ReminderModuleKey, ReminderModule | IncomeReminderModule | SurpriseModule>;
-
-export interface ReminderModule {
-  enabled: boolean;
-  defaultIntervalMinutes: number;
-  cooldownMinutes?: number;
-  triggers: TriggerConfig[];
-  messages: ReminderMessage[];
-}
-
-export interface IncomeReminderModule extends ReminderModule {
-  incomeConfig: {
-    hourlyRate: number;
-    currency: string;
-    workdayStart: string; // HH:mm
-    workdayEnd: string; // HH:mm
-    ignoreBreaks?: boolean;
-  };
-}
-
-export interface SurpriseModule extends ReminderModule {
-  randomStrategy: {
-    minIntervalMinutes: number;
-    maxIntervalMinutes: number;
-    probability: number;
-  };
-}
-
-export interface TriggerConfig {
-  id: string;
-  type: 'timeElapsed' | 'idle' | 'custom';
-  thresholdMinutes?: number;
-}
-
-export interface ReminderMessage {
-  id: string;
-  text: string;
-  weight?: number;
-  tags?: string[];
-  media?: {
-    animationId?: string;
-    soundId?: string;
-  };
-}
+export type {
+  AppConfig,
+  IncomeReminderModule,
+  ReminderMessage,
+  ReminderModule,
+  SurpriseModule,
+  TriggerConfig
+};
 
 // 以外部 JSON 作为默认配置，避免与磁盘默认值重复维护。
 const DEFAULT_CONFIG: AppConfig = rawDefaultConfig as AppConfig;
@@ -80,6 +44,13 @@ export async function loadAppConfig(): Promise<AppConfig> {
     console.warn(`[config] 读取配置失败，使用默认配置: ${configPath}`, error);
     return DEFAULT_CONFIG;
   }
+}
+
+export async function saveAppConfig(config: AppConfig): Promise<AppConfig> {
+  const configPath = resolveConfigPath();
+  const merged = mergeWithDefaults(config);
+  await fs.writeFile(configPath, JSON.stringify(merged, null, 2), 'utf-8');
+  return merged;
 }
 
 export function mergeWithDefaults(partial: Partial<AppConfig>): AppConfig {
