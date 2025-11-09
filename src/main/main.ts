@@ -9,6 +9,11 @@ let tray: Tray | null = null;
 let isQuitting = false;
 let reminderScheduler: ReminderScheduler | null = null;
 
+// Windows: disable DWM window animations to avoid flicker; keep others unchanged
+if (process.platform === 'win32') {
+  app.commandLine.appendSwitch('wm-window-animations-disabled');
+}
+
 const resolveAssetPath = (...paths: string[]): string => {
   const assetsBase = app.isPackaged ? join(process.resourcesPath, 'assets') : join(__dirname, '../../assets');
   return join(assetsBase, ...paths);
@@ -78,7 +83,7 @@ function createWindow(): BrowserWindow {
   mainWindow.on('close', (event) => {
     if (!isQuitting) {
       event.preventDefault();
-      mainWindow?.hide();
+      requestRendererExitThen(() => mainWindow && mainWindow.hide());
     }
   });
 
@@ -92,7 +97,11 @@ function createWindow(): BrowserWindow {
   });
 
   mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
+    if (mainWindow) {
+      mainWindow.webContents.send('app:will-show');
+      mainWindow.show();
+      mainWindow.focus();
+    }
   });
 
   loadRendererPage(mainWindow, 'main');
@@ -161,8 +170,9 @@ function createTray(): void {
   const toggleWindow = () => {
     const window = createWindow();
     if (window.isVisible()) {
-      window.hide();
+      requestRendererExitThen(() => window.hide());
     } else {
+      window.webContents.send('app:will-show');
       window.show();
       window.focus();
     }
@@ -210,6 +220,7 @@ app.whenReady().then(() => {
 
   app.on('activate', function () {
     const window = createWindow();
+    window.webContents.send('app:will-show');
     window.show();
     window.focus();
   });
@@ -280,4 +291,23 @@ function ensureScheduler(): ReminderScheduler {
     });
   }
   return reminderScheduler;
+}
+// Before hiding, ask renderer to play exit transition, then proceed
+function requestRendererExitThen(action: () => void) {
+  const win = createWindow();
+  if (!win || win.isDestroyed()) {
+    action();
+    return;
+  }
+  let done = false;
+  const onAck = (e: Electron.IpcMainEvent) => {
+    if (done) return;
+    if (e.sender === win.webContents) {
+      done = true;
+      ipcMain.removeListener('app:hide-ack', onAck);
+      action();
+    }
+  };
+  ipcMain.on('app:hide-ack', onAck);
+  win.webContents.send('app:will-hide');
 }

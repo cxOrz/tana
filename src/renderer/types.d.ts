@@ -9,6 +9,9 @@ declare global {
       saveAppConfig: (config: AppConfig) => Promise<AppConfig>;
       openConfigWindow: () => Promise<void>;
       onReminder: (callback: (payload: ReminderPayload) => void) => () => void;
+      onAppWillHide: (callback: () => void) => () => void;
+      onAppWillShow: (callback: () => void) => () => void;
+      notifyHideReady: () => void;
     };
   }
 }

@@ -7,6 +7,17 @@ const electronAPI = {
   loadAppConfig: (): Promise<AppConfig> => ipcRenderer.invoke('config:load'),
   saveAppConfig: (config: AppConfig): Promise<AppConfig> => ipcRenderer.invoke('config:save', config),
   openConfigWindow: (): Promise<void> => ipcRenderer.invoke('config:open'),
+  onAppWillHide: (callback: () => void) => {
+    const listener = () => callback();
+    ipcRenderer.on('app:will-hide', listener);
+    return () => ipcRenderer.removeListener('app:will-hide', listener);
+  },
+  onAppWillShow: (callback: () => void) => {
+    const listener = () => callback();
+    ipcRenderer.on('app:will-show', listener);
+    return () => ipcRenderer.removeListener('app:will-show', listener);
+  },
+  notifyHideReady: () => ipcRenderer.send('app:hide-ack'),
   onReminder: (callback: (payload: ReminderPayload) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, payload: ReminderPayload) => callback(payload);
     ipcRenderer.on('reminder:push', listener);

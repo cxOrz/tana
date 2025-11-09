@@ -11,6 +11,9 @@ const slimeSheetUrl = new URL('../assets/slime/slime.json', import.meta.url)
 
 let app: Application | null = null;
 let disposed = false;
+const rootEl = ref<HTMLDivElement | null>(null);
+const isExiting = ref(false);
+const isEntering = ref(false);
 
 const {
   activeReminder,
@@ -38,6 +41,24 @@ const bubbleBorderClass = computed(() => {
 });
 
 onMounted(async () => {
+  // 显示：先置入 enter，再下一帧移除以触发过渡
+  const offShow = window.electronAPI.onAppWillShow(() => {
+    isExiting.value = false;
+    isEntering.value = true;
+    requestAnimationFrame(() => {
+      isEntering.value = false;
+    });
+  });
+
+  // 隐藏：置 exit，等待过渡完成后回执
+  const offHide = window.electronAPI.onAppWillHide(() => {
+    isExiting.value = true;
+    const el = rootEl.value;
+    const onEnd = () => {
+      window.electronAPI.notifyHideReady();
+    };
+    el?.addEventListener('transitionend', onEnd as any, { once: true });
+  });
   const instance = new Application();
   await instance.init({
     backgroundAlpha: 0,
@@ -71,6 +92,12 @@ onMounted(async () => {
   slime.play();
 
   app.stage.addChild(slime);
+
+  // cleanup listeners when unmount
+  onBeforeUnmount(() => {
+    offShow?.();
+    offHide?.();
+  });
 });
 
 onBeforeUnmount(() => {
@@ -89,9 +116,11 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    class="relative flex h-full w-full items-center justify-center overflow-hidden bg-transparent"
-    ref="pixiContainer"
+    ref="rootEl"
+    class="app-shell relative h-full w-full overflow-hidden bg-transparent"
+    :class="{ 'app-enter': isEntering, 'app-exit': isExiting }"
   >
+    <div class="relative flex h-full w-full items-center justify-center" ref="pixiContainer">
     <div class="pointer-events-none absolute right-4 top-4">
       <Transition
         enter-active-class="transition duration-200 ease-out"
@@ -140,11 +169,26 @@ onBeforeUnmount(() => {
     >
       调试提醒
     </Button>
+    </div>
   </div>
 </template>
 
-<style lang="css" module>
+<style lang="css">
+html,
 body {
   background-color: transparent;
 }
+
+/* window fade transitions */
+.app-shell {
+  opacity: 1;
+  transition: opacity 220ms ease;
+}
+.app-enter {
+  opacity: 0;
+}
+.app-exit {
+  opacity: 0;
+}
+
 </style>
