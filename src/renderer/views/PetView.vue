@@ -133,7 +133,7 @@ onBeforeUnmount(() => {
         <div
           v-if="activeReminder"
           :key="activeReminder.messageId"
-          class="pointer-events-auto min-w-[200px] max-w-60 rounded-[14px] border bg-slate-900/90 px-4 pt-3.5 pb-3 text-sm font-normal leading-relaxed text-slate-100 shadow-[0_16px_28px_rgba(15,23,42,0.28)] backdrop-blur"
+          class="pointer-events-auto min-w-[200px] max-w-60 rounded-[14px] border bg-slate-900/90 px-4 pt-3.5 pb-3 text-sm font-normal leading-relaxed text-slate-100 shadow-[0_16px_28px_rgba(15,23,42,0.28)] backdrop-blur no-drag"
           :class="bubbleBorderClass"
         >
           <div class="mb-1.5 flex items-center justify-between">
@@ -142,7 +142,7 @@ onBeforeUnmount(() => {
             </span>
             <button
               type="button"
-              class="flex h-[22px] w-[22px] items-center justify-center rounded-xl border-0 bg-slate-400/20 p-0 text-base leading-none text-slate-100 transition hover:bg-slate-400/35"
+              class="flex h-[22px] w-[22px] items-center justify-center rounded-xl border-0 bg-slate-400/20 p-0 text-base leading-none text-slate-100 transition hover:bg-slate-400/35 no-drag"
               @click="dismissReminder"
             >
               ×
@@ -164,7 +164,7 @@ onBeforeUnmount(() => {
     <Button
       v-if="isDev"
       variant="outline"
-      class="cursor-pointer absolute bottom-4 right-4 flex items-center rounded-full border-0 px-4 py-2 text-[13px] font-semibold transition duration-200 ease-out backdrop-blur-sm"
+      class="cursor-pointer absolute bottom-4 right-4 flex items-center rounded-full border-0 px-4 py-2 text-[13px] font-semibold transition duration-200 ease-out backdrop-blur-sm no-drag"
       @click="pushMockReminder()"
     >
       调试提醒
@@ -183,6 +183,7 @@ body {
 .app-shell {
   opacity: 1;
   transition: opacity 220ms ease;
+  -webkit-app-region: drag;
 }
 .app-enter {
   opacity: 0;
@@ -191,4 +192,7 @@ body {
   opacity: 0;
 }
 
+.no-drag {
+  -webkit-app-region: no-drag;
+}
 </style>
