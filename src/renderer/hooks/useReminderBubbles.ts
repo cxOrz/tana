@@ -1,11 +1,19 @@
-import { computed, onBeforeUnmount, onMounted, ref, readonly, type ComputedRef, type Ref } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  readonly,
+  type ComputedRef,
+  type Ref,
+} from 'vue';
 import type { ReminderModuleKey, ReminderPayload } from '../../shared';
 
 const moduleLabelMap: Record<ReminderModuleKey, string> = {
   progress: '专注提醒',
   income: '收益提示',
   wellness: '状态提醒',
-  surprise: '小惊喜'
+  surprise: '小惊喜',
 };
 
 const isDev = import.meta.env.DEV;
@@ -29,14 +37,16 @@ export function useReminderBubbles(): UseReminderBubblesResult {
 
   const activeModuleLabel = computed(() => {
     const module = internalActiveReminder.value?.module;
-    return module ? moduleLabelMap[module] ?? '提醒' : '';
+    return module ? (moduleLabelMap[module] ?? '提醒') : '';
   });
 
   const activeTime = computed(() => {
     const current = internalActiveReminder.value;
     if (!current) return '';
     const date = new Date(current.timestamp);
-    return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    return Number.isNaN(date.getTime())
+      ? ''
+      : date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
   });
 
   const mockModules: ReminderModuleKey[] = ['progress', 'income', 'wellness', 'surprise'];
@@ -84,14 +94,17 @@ export function useReminderBubbles(): UseReminderBubblesResult {
 
   const pushMockReminder = (module?: ReminderModuleKey) => {
     const selectedModule = module ?? takeMockModule();
-    const messageId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `mock-${Date.now()}`;
+    const messageId =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `mock-${Date.now()}`;
 
     const payload: ReminderPayload = {
       module: selectedModule,
       messageId,
       text: `[调试] 这是一条 ${moduleLabelMap[selectedModule]} 消息。`,
       timestamp: Date.now(),
-      context: { mock: true }
+      context: { mock: true },
     };
 
     pushReminder(payload);
@@ -128,7 +141,6 @@ export function useReminderBubbles(): UseReminderBubblesResult {
     activeTime,
     isDev,
     dismissReminder,
-    pushMockReminder
+    pushMockReminder,
   };
 }
-

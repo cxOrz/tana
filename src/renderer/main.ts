@@ -10,12 +10,12 @@ usePreferredColorScheme();
 
 const routes = [
   { path: '/', name: 'home', component: PetScreen },
-  { path: '/config', name: 'config', component: ConfigScreen }
+  { path: '/config', name: 'config', component: ConfigScreen },
 ];
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes
+  routes,
 });
 
 const app = createApp(App);

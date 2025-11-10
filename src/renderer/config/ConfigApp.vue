@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import type {
-  AppConfig,
-} from '../../shared';
+import type { AppConfig } from '../../shared';
 
 const loading = ref(true);
 const loadError = ref<string | null>(null);
@@ -10,7 +8,6 @@ const config = ref<AppConfig | null>(null);
 const originalConfig = ref<AppConfig | null>(null);
 
 const cloneConfig = (value: AppConfig): AppConfig => JSON.parse(JSON.stringify(value)) as AppConfig;
-
 
 onMounted(() => {
   loadConfig();
@@ -35,14 +32,10 @@ async function loadConfig() {
     loading.value = false;
   }
 }
-
 </script>
 
 <template>
-  <div class="min-h-screen w-full bg-background">
-    ConfigCenter
-  </div>
+  <div class="min-h-screen w-full bg-background">ConfigCenter</div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -5,7 +5,8 @@ import type { AppConfig, ReminderPayload } from '../shared';
 const electronAPI = {
   executeCommand: (command: string) => ipcRenderer.invoke('execute-command', command),
   loadAppConfig: (): Promise<AppConfig> => ipcRenderer.invoke('config:load'),
-  saveAppConfig: (config: AppConfig): Promise<AppConfig> => ipcRenderer.invoke('config:save', config),
+  saveAppConfig: (config: AppConfig): Promise<AppConfig> =>
+    ipcRenderer.invoke('config:save', config),
   openConfigWindow: (): Promise<void> => ipcRenderer.invoke('config:open'),
   onAppWillHide: (callback: () => void) => {
     const listener = () => callback();
@@ -19,7 +20,8 @@ const electronAPI = {
   },
   notifyHideReady: () => ipcRenderer.send('app:hide-ack'),
   onReminder: (callback: (payload: ReminderPayload) => void) => {
-    const listener = (_event: Electron.IpcRendererEvent, payload: ReminderPayload) => callback(payload);
+    const listener = (_event: Electron.IpcRendererEvent, payload: ReminderPayload) =>
+      callback(payload);
     ipcRenderer.on('reminder:push', listener);
     return () => {
       ipcRenderer.removeListener('reminder:push', listener);

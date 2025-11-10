@@ -8,7 +8,7 @@ import type {
   ReminderMessage,
   ReminderModule,
   SurpriseModule,
-  TriggerConfig
+  TriggerConfig,
 } from '../shared';
 
 export type {
@@ -17,7 +17,7 @@ export type {
   ReminderMessage,
   ReminderModule,
   SurpriseModule,
-  TriggerConfig
+  TriggerConfig,
 };
 
 // 以外部 JSON 作为默认配置，避免与磁盘默认值重复维护。
@@ -39,16 +39,16 @@ export async function loadAppConfig(): Promise<AppConfig> {
   try {
     const raw = await fs.readFile(configPath, 'utf-8');
     const parsed = JSON.parse(raw) as Partial<AppConfig>;
-    return mergeWithDefaults(parsed);
+    return sanitizeConfig(mergeWithDefaults(parsed));
   } catch (error) {
     console.warn(`[config] 读取配置失败，使用默认配置: ${configPath}`, error);
-    return DEFAULT_CONFIG;
+    return sanitizeConfig(DEFAULT_CONFIG);
   }
 }
 
 export async function saveAppConfig(config: AppConfig): Promise<AppConfig> {
   const configPath = resolveConfigPath();
-  const merged = mergeWithDefaults(config);
+  const merged = sanitizeConfig(mergeWithDefaults(config));
   await fs.writeFile(configPath, JSON.stringify(merged, null, 2), 'utf-8');
   return merged;
 }
@@ -64,10 +64,16 @@ export function mergeWithDefaults(partial: Partial<AppConfig>): AppConfig {
     ...partial,
     reminders: {
       progress: mergeReminderModule(DEFAULT_CONFIG.reminders.progress, progressOverrides),
-      income: mergeIncomeModule(DEFAULT_CONFIG.reminders.income as IncomeReminderModule, incomeOverrides),
+      income: mergeIncomeModule(
+        DEFAULT_CONFIG.reminders.income as IncomeReminderModule,
+        incomeOverrides
+      ),
       wellness: mergeReminderModule(DEFAULT_CONFIG.reminders.wellness, wellnessOverrides),
-      surprise: mergeSurpriseModule(DEFAULT_CONFIG.reminders.surprise as SurpriseModule, surpriseOverrides)
-    }
+      surprise: mergeSurpriseModule(
+        DEFAULT_CONFIG.reminders.surprise as SurpriseModule,
+        surpriseOverrides
+      ),
+    },
   };
 }
 
@@ -80,26 +86,48 @@ function mergeReminderModule<T extends ReminderModule>(base: T, overrides?: Part
     ...base,
     ...overrides,
     triggers: cloneArray(overrides?.triggers, base.triggers),
-    messages: cloneArray(overrides?.messages, base.messages)
+    messages: cloneArray(overrides?.messages, base.messages),
   };
 }
 
-function mergeIncomeModule(base: IncomeReminderModule, overrides?: Partial<IncomeReminderModule>): IncomeReminderModule {
+function mergeIncomeModule(
+  base: IncomeReminderModule,
+  overrides?: Partial<IncomeReminderModule>
+): IncomeReminderModule {
   return {
     ...mergeReminderModule(base, overrides),
     incomeConfig: {
       ...base.incomeConfig,
-      ...overrides?.incomeConfig
-    }
+      ...overrides?.incomeConfig,
+    },
   };
 }
 
-function mergeSurpriseModule(base: SurpriseModule, overrides?: Partial<SurpriseModule>): SurpriseModule {
+function mergeSurpriseModule(
+  base: SurpriseModule,
+  overrides?: Partial<SurpriseModule>
+): SurpriseModule {
   return {
     ...mergeReminderModule(base, overrides),
     randomStrategy: {
       ...base.randomStrategy,
-      ...overrides?.randomStrategy
-    }
+      ...overrides?.randomStrategy,
+    },
   };
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function sanitizeConfig(cfg: AppConfig): AppConfig {
+  const base = { ...cfg } as AppConfig;
+  if (!base.baseIntervalMinutes || base.baseIntervalMinutes < 1) base.baseIntervalMinutes = 1;
+  const scale = base.petWindow?.scale ?? 1;
+  base.petWindow = { scale: clamp(Number(scale) || 1, 0.5, 3) };
+  base.notifications = {
+    systemEnabled: base.notifications?.systemEnabled ?? true,
+    silent: base.notifications?.silent ?? false,
+  };
+  return base;
 }

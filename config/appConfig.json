@@ -9,9 +9,7 @@
       "enabled": true,
       "defaultIntervalMinutes": 25,
       "cooldownMinutes": 5,
-      "triggers": [
-        { "id": "focus25", "type": "timeElapsed", "thresholdMinutes": 25 }
-      ],
+      "triggers": [{ "id": "focus25", "type": "timeElapsed", "thresholdMinutes": 25 }],
       "messages": [
         { "id": "focus-1", "text": "已经专注 25 分钟啦，坚持就有收获！", "weight": 2 },
         { "id": "focus-2", "text": "我一直在这陪着你，一起挣钱呀~" }
@@ -20,9 +18,7 @@
     "income": {
       "enabled": true,
       "defaultIntervalMinutes": 45,
-      "triggers": [
-        { "id": "income45", "type": "timeElapsed", "thresholdMinutes": 45 }
-      ],
+      "triggers": [{ "id": "income45", "type": "timeElapsed", "thresholdMinutes": 45 }],
       "incomeConfig": {
         "hourlyRate": 64,
         "currency": "CNY",
@@ -38,9 +34,7 @@
     "wellness": {
       "enabled": true,
       "defaultIntervalMinutes": 60,
-      "triggers": [
-        { "id": "work60", "type": "timeElapsed", "thresholdMinutes": 60 }
-      ],
+      "triggers": [{ "id": "work60", "type": "timeElapsed", "thresholdMinutes": 60 }],
       "messages": [
         { "id": "wellness-1", "text": "感觉你已经坐了挺久，要不要出去散个步？" },
         { "id": "wellness-2", "text": "补充点水分吧，一会继续干！" }

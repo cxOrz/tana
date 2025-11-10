@@ -1,5 +1,11 @@
 import type { ReminderModuleKey, ReminderPayload } from '../shared';
-import { AppConfig, IncomeReminderModule, ReminderMessage, ReminderModule, SurpriseModule } from './config';
+import {
+  AppConfig,
+  IncomeReminderModule,
+  ReminderMessage,
+  ReminderModule,
+  SurpriseModule,
+} from './config';
 
 interface BaseModuleState {
   elapsedMinutes: number;
@@ -68,7 +74,7 @@ export class ReminderScheduler {
     // 外部可在运行时注入上下文（例如 custom 触发器依赖的标记位）
     this.runtimeContext = {
       ...this.runtimeContext,
-      ...context
+      ...context,
     };
   }
 
@@ -130,7 +136,7 @@ export class ReminderScheduler {
         messageId: message.id,
         text: renderedText,
         timestamp: now,
-        context
+        context,
       });
 
       state.lastTriggerAt = now;
@@ -217,7 +223,7 @@ export class ReminderScheduler {
   ): Record<string, unknown> {
     const context: Record<string, unknown> = {
       deltaMinutes: Number(deltaMinutes.toFixed(2)),
-      timestamp: now
+      timestamp: now,
     };
 
     if (key === 'income' && isIncomeModule(moduleConfig) && isIncomeState(state)) {
@@ -267,7 +273,7 @@ export class ReminderScheduler {
       return {
         elapsedMinutes: 0,
         workedMinutesToday: 0,
-        incomeToday: 0
+        incomeToday: 0,
       } as IncomeModuleState;
     }
 
@@ -275,18 +281,21 @@ export class ReminderScheduler {
       // 惊喜模块维护随机触发窗口
       return {
         elapsedMinutes: 0,
-        randomWindow: undefined
+        randomWindow: undefined,
       } as SurpriseModuleState;
     }
 
     return {
-      elapsedMinutes: 0
+      elapsedMinutes: 0,
     };
   }
 
   private resetDailyStates(): void {
     // 跨日时重置计数，避免上一日数据影响今日提醒
-    for (const [key, state] of Object.entries(this.moduleStates) as [ReminderModuleKey, ModuleState][]) {
+    for (const [key, state] of Object.entries(this.moduleStates) as [
+      ReminderModuleKey,
+      ModuleState,
+    ][]) {
       state.elapsedMinutes = 0;
       state.lastTriggerAt = undefined;
       state.nextAvailableAt = undefined;
@@ -301,7 +310,6 @@ export class ReminderScheduler {
       }
     }
   }
-
 }
 
 function interpolate(template: string, context: Record<string, unknown>): string {
@@ -330,7 +338,10 @@ function pickMessage(messages: ReminderMessage[]): ReminderMessage | undefined {
   return messages[0];
 }
 
-function createRandomWindow(now: number, strategy: SurpriseModule['randomStrategy']): { earliest: number; latest: number } {
+function createRandomWindow(
+  now: number,
+  strategy: SurpriseModule['randomStrategy']
+): { earliest: number; latest: number } {
   // 根据配置生成一个允许触发的时间窗，避免提醒过于集中
   const { minIntervalMinutes, maxIntervalMinutes } = strategy;
   const minMs = Math.max(minIntervalMinutes, 1) * 60 * 1000;
@@ -355,11 +366,15 @@ function getDayStamp(date: Date): string {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }
 
-function isIncomeModule(module: ReminderModule | IncomeReminderModule | SurpriseModule): module is IncomeReminderModule {
+function isIncomeModule(
+  module: ReminderModule | IncomeReminderModule | SurpriseModule
+): module is IncomeReminderModule {
   return (module as IncomeReminderModule).incomeConfig !== undefined;
 }
 
-function isSurpriseModule(module: ReminderModule | IncomeReminderModule | SurpriseModule): module is SurpriseModule {
+function isSurpriseModule(
+  module: ReminderModule | IncomeReminderModule | SurpriseModule
+): module is SurpriseModule {
   return (module as SurpriseModule).randomStrategy !== undefined;
 }
 

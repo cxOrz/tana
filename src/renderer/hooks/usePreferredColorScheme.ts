@@ -21,6 +21,6 @@ export function usePreferredColorScheme() {
 
   return {
     isDark,
-    stop
+    stop,
   };
 }

@@ -1,25 +1,16 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "compilerOptions": {
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
+    "lib": ["ESNext", "DOM"],
     "isolatedModules": true,
-    "types": [
-      "vite/client"
-    ],
+    "types": ["vite/client"],
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/renderer/*"
-      ]
+      "@/*": ["./src/renderer/*"]
     }
   },
-  "include": [
-    "src/renderer/**/*"
-  ]
+  "include": ["src/renderer/**/*"]
 }
