@@ -14,6 +14,7 @@ let disposed = false;
 const rootEl = ref<HTMLDivElement | null>(null);
 const isExiting = ref(false);
 const isEntering = ref(false);
+const uiScale = ref(1);
 
 const {
   activeReminder,
@@ -62,8 +63,8 @@ onMounted(async () => {
   const instance = new Application();
   await instance.init({
     backgroundAlpha: 0,
-    width: 450,
-    height: 360
+    // Auto-resize canvas to the window size
+    resizeTo: window as any
   });
 
   if (disposed || !pixiContainer.value) {
@@ -87,16 +88,36 @@ onMounted(async () => {
 
   const slime = new AnimatedSprite(frames);
   slime.anchor.set(0.5);
-  slime.position.set(app.screen.width / 2, app.screen.height / 2);
+  // Base logical size for scale computation (matches main BASE_WINDOW)
+  const BASE_WIDTH = 450;
+  const BASE_HEIGHT = 360;
+  // center and scale to current screen size
+  const applyLayout = () => {
+    if (!app) return;
+    const scaleX = app.screen.width / BASE_WIDTH;
+    const scaleY = app.screen.height / BASE_HEIGHT;
+    const uniform = Math.min(scaleX, scaleY);
+    slime.scale.set(uniform);
+    slime.position.set(app.screen.width / 2, app.screen.height / 2);
+    // UI bubble scales down on small windows to avoid covering the scene
+    uiScale.value = Math.min(1, Math.max(0.7, uniform));
+  };
+  applyLayout();
   slime.animationSpeed = 0.03;
   slime.play();
 
   app.stage.addChild(slime);
 
+  // Keep slime centered on window resize
+  const onResize = () => applyLayout();
+  // Use window resize which tracks BrowserWindow content size changes
+  window.addEventListener('resize', onResize);
+
   // cleanup listeners when unmount
   onBeforeUnmount(() => {
     offShow?.();
     offHide?.();
+    window.removeEventListener('resize', onResize);
   });
 });
 
@@ -133,7 +154,8 @@ onBeforeUnmount(() => {
         <div
           v-if="activeReminder"
           :key="activeReminder.messageId"
-          class="pointer-events-auto min-w-[200px] max-w-60 rounded-[14px] border bg-slate-900/90 px-4 pt-3.5 pb-3 text-sm font-normal leading-relaxed text-slate-100 shadow-[0_16px_28px_rgba(15,23,42,0.28)] backdrop-blur no-drag"
+          class="pointer-events-auto min-w-[160px] max-w-60 rounded-[14px] border bg-slate-900/90 px-4 pt-3.5 pb-3 text-sm font-normal leading-relaxed text-slate-100 shadow-[0_16px_28px_rgba(15,23,42,0.28)] backdrop-blur no-drag"
+          :style="{ transform: `scale(${uiScale})`, transformOrigin: 'top right', maxWidth: 'min(280px, 80vw)' }"
           :class="bubbleBorderClass"
         >
           <div class="mb-1.5 flex items-center justify-between">
@@ -165,6 +187,7 @@ onBeforeUnmount(() => {
       v-if="isDev"
       variant="outline"
       class="cursor-pointer absolute bottom-4 right-4 flex items-center rounded-full border-0 px-4 py-2 text-[13px] font-semibold transition duration-200 ease-out backdrop-blur-sm no-drag"
+      :style="{ transform: `scale(${uiScale})`, transformOrigin: 'bottom right' }"
       @click="pushMockReminder()"
     >
       调试提醒

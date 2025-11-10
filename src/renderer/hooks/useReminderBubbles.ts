@@ -4,7 +4,7 @@ import type { ReminderModuleKey, ReminderPayload } from '../../shared';
 const moduleLabelMap: Record<ReminderModuleKey, string> = {
   progress: '专注提醒',
   income: '收益提示',
-  wellness: '状态调节',
+  wellness: '状态提醒',
   surprise: '小惊喜'
 };
 
@@ -21,10 +21,7 @@ export interface UseReminderBubblesResult {
   pushMockReminder: (module?: ReminderModuleKey) => void;
 }
 
-/**
- * 提供提醒队列与展示的控制逻辑，封装订阅、调试等细节。
- * 注意：每次调用都会创建独立的提醒队列实例，方便测试与复用。
- */
+// 提供提醒队列与展示的控制逻辑
 export function useReminderBubbles(): UseReminderBubblesResult {
   const reminderQueue = ref<ReminderPayload[]>([]);
   const internalActiveReminder = ref<ReminderPayload | null>(null);
@@ -37,13 +34,9 @@ export function useReminderBubbles(): UseReminderBubblesResult {
 
   const activeTime = computed(() => {
     const current = internalActiveReminder.value;
-    if (!current) {
-      return '';
-    }
+    if (!current) return '';
     const date = new Date(current.timestamp);
-    return Number.isNaN(date.getTime())
-      ? ''
-      : date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
   });
 
   const mockModules: ReminderModuleKey[] = ['progress', 'income', 'wellness', 'surprise'];
@@ -66,13 +59,9 @@ export function useReminderBubbles(): UseReminderBubblesResult {
   }
 
   function showNextReminder(): void {
-    if (internalActiveReminder.value) {
-      return;
-    }
+    if (internalActiveReminder.value) return;
     const next = reminderQueue.value.shift();
-    if (!next) {
-      return;
-    }
+    if (!next) return;
     internalActiveReminder.value = next;
     scheduleAutoDismiss();
   }
@@ -95,16 +84,20 @@ export function useReminderBubbles(): UseReminderBubblesResult {
 
   const pushMockReminder = (module?: ReminderModuleKey) => {
     const selectedModule = module ?? takeMockModule();
-    const messageId =
-      typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `mock-${Date.now()}`;
+    const messageId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `mock-${Date.now()}`;
 
-    pushReminder({
+    const payload: ReminderPayload = {
       module: selectedModule,
       messageId,
       text: `[调试] 这是一条 ${moduleLabelMap[selectedModule]} 消息。`,
       timestamp: Date.now(),
       context: { mock: true }
-    });
+    };
+
+    pushReminder(payload);
+    try {
+      window.electronAPI?.notifySystem?.(payload);
+    } catch {}
   };
 
   onMounted(() => {
@@ -115,7 +108,6 @@ export function useReminderBubbles(): UseReminderBubblesResult {
     }
 
     if (isDev) {
-      // 方便在 DevTools 中手动注入提醒。
       (window as unknown as Record<string, unknown>)[DEV_GLOBAL_PUSH_MOCK_KEY] = pushMockReminder;
     }
   });
@@ -139,3 +131,4 @@ export function useReminderBubbles(): UseReminderBubblesResult {
     pushMockReminder
   };
 }
+

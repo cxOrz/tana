@@ -5,6 +5,8 @@ export interface AppConfig {
   locale: string;
   baseIntervalMinutes: number;
   reminders: ReminderConfigMap;
+  petWindow?: PetWindowConfig;
+  notifications?: NotificationConfig;
 }
 
 export type ReminderConfigMap = Record<
@@ -53,4 +55,14 @@ export interface ReminderMessage {
     animationId?: string;
     soundId?: string;
   };
+}
+
+export interface PetWindowConfig {
+  // Scale factor applied to base window size
+  scale: number;
+}
+
+export interface NotificationConfig {
+  systemEnabled: boolean;
+  silent?: boolean;
 }

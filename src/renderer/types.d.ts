@@ -12,6 +12,7 @@ declare global {
       onAppWillHide: (callback: () => void) => () => void;
       onAppWillShow: (callback: () => void) => () => void;
       notifyHideReady: () => void;
+      notifySystem: (payload: ReminderPayload) => Promise<void>;
     };
   }
 }

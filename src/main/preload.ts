@@ -25,6 +25,7 @@ const electronAPI = {
       ipcRenderer.removeListener('reminder:push', listener);
     };
   },
+  notifySystem: (payload: ReminderPayload) => ipcRenderer.invoke('notify:system', payload),
 };
 
 // 类型声明

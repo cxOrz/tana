@@ -1,13 +1,17 @@
-import { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage, Notification } from 'electron';
 import { join } from 'path';
 import { loadAppConfig, saveAppConfig, type AppConfig } from './config';
 import { ReminderScheduler } from './reminderScheduler';
+import type { ReminderPayload } from '../shared';
 
 let mainWindow: BrowserWindow | null = null;
 let configWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuitting = false;
 let reminderScheduler: ReminderScheduler | null = null;
+// Base size used for scaling the pet window
+const BASE_WINDOW = { width: 450, height: 360 };
+let initialWindowSize: { width: number; height: number } = { ...BASE_WINDOW };
 
 // Windows: disable DWM window animations to avoid flicker; keep others unchanged
 if (process.platform === 'win32') {
@@ -58,8 +62,8 @@ function createWindow(): BrowserWindow {
   const windowIcon = process.platform === 'win32' ? resolveAssetPath('icons', 'logo.ico') : resolveAssetPath('icons', 'logo.png');
 
   mainWindow = new BrowserWindow({
-    width: 450,
-    height: 360,
+    width: initialWindowSize.width,
+    height: initialWindowSize.height,
     useContentSize: true,
     show: false,
     autoHideMenuBar: true,
@@ -203,7 +207,21 @@ function createTray(): void {
   tray.on('click', toggleWindow);
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Load size (scale) from config before creating the window
+  try {
+    const cfg = await loadAppConfig();
+    const anyCfg: any = cfg as any;
+    if (anyCfg?.petWindow?.scale && typeof anyCfg.petWindow.scale === 'number') {
+      const scale = Math.max(0.5, Math.min(3, anyCfg.petWindow.scale));
+      initialWindowSize = {
+        width: Math.round(BASE_WINDOW.width * scale),
+        height: Math.round(BASE_WINDOW.height * scale)
+      };
+    }
+  } catch (err) {
+    console.warn('[main] Failed to load window size from config, using defaults.', err);
+  }
   if (process.platform === 'darwin' && app.dock) {
     const dockIcon = nativeImage.createFromPath(resolveAssetPath('icons', 'logo.png'));
     app.dock.setIcon(dockIcon);
@@ -264,11 +282,38 @@ ipcMain.handle('config:save', async (_event, config: AppConfig) => {
     console.error('[config] 更新调度器失败', error);
   }
 
+  // Apply window size changes immediately if present (via scale)
+  try {
+    const anyCfg: any = persisted as any;
+    if (anyCfg?.petWindow?.scale && typeof anyCfg.petWindow.scale === 'number') {
+      const scale = Math.max(0.5, Math.min(3, anyCfg.petWindow.scale));
+      initialWindowSize = {
+        width: Math.round(BASE_WINDOW.width * scale),
+        height: Math.round(BASE_WINDOW.height * scale)
+      };
+      const win = createWindow();
+      if (!win.isDestroyed()) {
+        // Keep using content size to match window options
+        win.setContentSize(initialWindowSize.width, initialWindowSize.height);
+      }
+    }
+  } catch (error) {
+    console.warn('[config] 应用窗口尺寸失败', error);
+  }
+
   return persisted;
 });
 
 ipcMain.handle('config:open', async () => {
   openConfigWindow();
+});
+
+ipcMain.handle('notify:system', async (_event, payload: ReminderPayload) => {
+  try {
+    maybeShowSystemNotification(payload);
+  } catch (err) {
+    console.warn('[notify] Failed to show system notification (renderer request)', err);
+  }
 });
 
 async function initializeReminderScheduler(): Promise<void> {
@@ -286,6 +331,11 @@ function ensureScheduler(): ReminderScheduler {
       const window = createWindow();
       if (!window || window.isDestroyed()) {
         return;
+      }
+      try {
+        maybeShowSystemNotification(payload);
+      } catch (err) {
+        console.warn('[notify] Failed to show system notification', err);
       }
       window.webContents.send('reminder:push', payload);
     });
@@ -310,4 +360,53 @@ function requestRendererExitThen(action: () => void) {
   };
   ipcMain.on('app:hide-ack', onAck);
   win.webContents.send('app:will-hide');
+}
+
+function maybeShowSystemNotification(payload: ReminderPayload) {
+  const should = (cfg: AppConfig | null | undefined) => !!cfg?.notifications?.systemEnabled;
+
+  // best-effort load current config
+  loadAppConfig()
+    .then((cfg) => {
+      if (!should(cfg)) return;
+      const title = moduleTitle(payload.module);
+      const body = payload.text;
+      const trayIconPath = process.platform === 'win32'
+        ? resolveAssetPath('icons', 'logo.ico')
+        : resolveAssetPath('icons', 'logo.png');
+
+      const notif = new Notification({
+        title,
+        body,
+        icon: trayIconPath,
+        silent: !!cfg?.notifications?.silent
+      });
+      notif.on('click', () => {
+        const win = createWindow();
+        if (!win.isDestroyed()) {
+          win.webContents.send('app:will-show');
+          win.show();
+          win.focus();
+        }
+      });
+      notif.show();
+    })
+    .catch(() => {
+      // ignore
+    });
+}
+
+function moduleTitle(key: string): string {
+  switch (key) {
+    case 'progress':
+      return '专注提醒';
+    case 'income':
+      return '收益提醒';
+    case 'wellness':
+      return '健康提醒';
+    case 'surprise':
+      return '小惊喜';
+    default:
+      return 'Tana 提醒';
+  }
 }
