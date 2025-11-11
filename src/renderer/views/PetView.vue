@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { AnimatedSprite, Application, Assets } from 'pixi.js';
-import type { Spritesheet } from 'pixi.js';
+import { AnimatedSprite, Application, Assets, Spritesheet } from 'pixi.js';
+import type { SpritesheetData, Texture } from 'pixi.js';
 import { useReminderBubbles } from '../hooks/useReminderBubbles';
 import { Button } from '@/components/ui/button';
+import slimeSheetData from '../assets/slime/slime.json';
+import slimeTextureUrl from '../assets/slime/slime.png';
 
 const pixiContainer = ref<HTMLDivElement | null>(null);
-const slimeSheetUrl = new URL('../assets/slime/slime.json', import.meta.url).href;
 
 let app: Application | null = null;
 let disposed = false;
@@ -14,6 +15,13 @@ const rootEl = ref<HTMLDivElement | null>(null);
 const isExiting = ref(false);
 const isEntering = ref(false);
 const uiScale = ref(1);
+
+const loadSlimeSpritesheet = async (): Promise<Spritesheet> => {
+  const texture = await Assets.load<Texture>(slimeTextureUrl);
+  const sheet = new Spritesheet(texture, slimeSheetData as SpritesheetData);
+  await sheet.parse();
+  return sheet;
+};
 
 const { activeReminder, activeModuleLabel, activeTime, isDev, dismissReminder, pushMockReminder } =
   useReminderBubbles();
@@ -69,7 +77,7 @@ onMounted(async () => {
   app = instance;
   instance.canvas.classList.add('w-full', 'h-full', 'block');
 
-  const spritesheet = await Assets.load<Spritesheet>(slimeSheetUrl);
+  const spritesheet = await loadSlimeSpritesheet();
 
   if (disposed || !app) {
     return;
