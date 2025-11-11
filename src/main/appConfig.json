@@ -2,7 +2,7 @@
   "version": "1.0",
   "locale": "zh-CN",
   "baseIntervalMinutes": 1,
-  "petWindow": { "scale": 0.5 },
+  "petWindow": { "scale": 0.7 },
   "notifications": { "systemEnabled": true, "silent": false },
   "reminders": {
     "progress": {

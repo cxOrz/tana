@@ -5,7 +5,7 @@
 ## ✨ 核心特性
 
 - **随时在线的桌宠**：Pixi.js 渲染动画史莱姆，窗口透明、无边框、始终置顶，不影响日常工作。
-- **模块化提醒系统**：进度、收益、健康、惊喜四类提醒，全部由 `config/appConfig.json` 配置驱动，可自定义文案与触发条件。
+- **模块化提醒系统**：进度、收益、健康、惊喜四类提醒，默认由 `src/main/appConfig.json` 模板驱动，可自定义文案与触发条件。
 - **智能调度器**：主进程 `ReminderScheduler` 统一管理提醒队列，支持时间间隔、随机概率等策略。
 - **安全的主/渲染通信**：通过 `preload.ts` 暴露有限 API，渲染层只接收提醒事件并更新气泡 UI。
 - **开发友好**：Vite 热更新、TypeScript 全面覆盖、Electron Forge 一键构建/打包。
@@ -15,8 +15,8 @@
 ```
 .
 ├── assets/                  # Electron 侧静态资源（应用图标、托盘图标等）
-├── config/
-│   └── appConfig.json       # 可编辑的提醒配置，启动时会被加载
+├── src/main/
+│   └── appConfig.json       # 默认提醒配置模板，首次运行会拷贝到用户目录
 ├── forge.config.js          # Electron Forge 打包配置
 ├── package.json             # 脚本与依赖
 ├── tsconfig.json            # 渲染进程 TypeScript 配置
@@ -89,7 +89,10 @@ npm run forge:make # build + forge make 组合流程
 
 ## 🧩 配置说明
 
-`config/appConfig.json` 控制所有提醒逻辑：
+`src/main/appConfig.json` 存放提醒模块的默认模板，应用首次启动会将其拷贝到用户配置目录
+`app.getPath('userData')/config/appConfig.json`（Linux 通常位于 `~/.config/Tana Desktop Pet/config/appConfig.json`，Windows/macOS
+会落在各自的 AppData/Application Support 下），之后所有读取与写入都发生在该用户级文件中。删除该文件即可在下次
+启动时重新复制模板。配置项说明：
 
 - `baseIntervalMinutes`：调度器轮询间隔。
 - `reminders.progress` 等模块可配置 `triggers`、`messages`、`cooldownMinutes`。

@@ -1,7 +1,7 @@
 import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import rawDefaultConfig from '../../config/appConfig.json';
+import rawDefaultConfig from './appConfig.json';
 import type {
   AppConfig,
   IncomeReminderModule,
@@ -23,18 +23,40 @@ export type {
 // 以外部 JSON 作为默认配置，避免与磁盘默认值重复维护。
 const DEFAULT_CONFIG: AppConfig = rawDefaultConfig as AppConfig;
 
-const CONFIG_RELATIVE_PATH = join('config', 'appConfig.json');
+const CONFIG_DIR_NAME = 'config';
+const CONFIG_FILE_NAME = 'appConfig.json';
 
 export const resolveConfigPath = (): string => {
-  if (app.isPackaged) {
-    return join(process.resourcesPath, CONFIG_RELATIVE_PATH);
+  return join(app.getPath('userData'), CONFIG_DIR_NAME, CONFIG_FILE_NAME);
+};
+
+const ensureConfigDir = async (): Promise<string> => {
+  const dir = join(app.getPath('userData'), CONFIG_DIR_NAME);
+  await fs.mkdir(dir, { recursive: true });
+  return dir;
+};
+
+const ensureConfigFile = async (): Promise<string> => {
+  await ensureConfigDir();
+  const configPath = resolveConfigPath();
+
+  try {
+    await fs.access(configPath);
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    if (err.code === 'ENOENT') {
+      await fs.writeFile(configPath, JSON.stringify(DEFAULT_CONFIG, null, 2), 'utf-8');
+      console.info(`[config] 初始化用户配置: ${configPath}`);
+    } else {
+      throw error;
+    }
   }
 
-  return join(app.getAppPath(), CONFIG_RELATIVE_PATH);
+  return configPath;
 };
 
 export async function loadAppConfig(): Promise<AppConfig> {
-  const configPath = resolveConfigPath();
+  const configPath = await ensureConfigFile();
 
   try {
     const raw = await fs.readFile(configPath, 'utf-8');
@@ -47,6 +69,7 @@ export async function loadAppConfig(): Promise<AppConfig> {
 }
 
 export async function saveAppConfig(config: AppConfig): Promise<AppConfig> {
+  await ensureConfigDir();
   const configPath = resolveConfigPath();
   const merged = sanitizeConfig(mergeWithDefaults(config));
   await fs.writeFile(configPath, JSON.stringify(merged, null, 2), 'utf-8');

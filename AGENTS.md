@@ -5,11 +5,10 @@
 - `src/renderer` — Vue UI (views, components, composables, assets imports).
 - `src/shared` — Types and utilities shared across processes.
 - `assets/` — Global sprites/audio; import via `src/renderer/assets`.
-- `config/appConfig.json` — Runtime defaults (e.g., window size).
+- `src/main/appConfig.json` — Default reminder template; copied to user config on first run.
 - `dist/` — Build output for Forge; do not edit directly.
 
 ## Build, Test, and Development Commands
-- `npm run dev` — Run Vite + TypeScript + Electron together for fast iteration.
 - `npm run build` — Build renderer (Vite) and main (tsc) into `dist/`.
 - `npm run preview` — Serve renderer-only build to validate Vue changes.
 - `npm run start` / `npm run make` — Start packaged app / produce installers (after build).
@@ -34,5 +33,5 @@
 - PRs: include motivation, verification evidence (commands + screenshots for UI), and link issues when available.
 
 ## Security & Configuration Tips
-- Do not hard‑code secrets. Prefer `config/appConfig.json` or environment variables (via Vite) for overrides.
+- Do not hard‑code secrets. Prefer `src/main/appConfig.json` or environment variables (via Vite) for overrides.
 - Reference new sprites/audio under `assets/` and import through `src/renderer/assets` so both dev and packaged builds work.
