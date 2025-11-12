@@ -9,6 +9,16 @@ import {
 } from 'vue';
 import type { ReminderModuleKey, ReminderPayload } from '../../shared';
 
+/**
+ * @file useReminderBubbles.ts
+ * @description
+ * 负责管理和显示提醒气泡的 Vue Composition API hook。
+ * 它包含一个提醒队列，并处理单个提醒的显示、自动隐藏和手动关闭逻辑。
+ */
+
+/**
+ * 模块键到中文标签的映射。
+ */
 const moduleLabelMap: Record<ReminderModuleKey, string> = {
   progress: '专注提醒',
   income: '收益提示',
@@ -20,6 +30,16 @@ const isDev = import.meta.env.DEV;
 const DISPLAY_DURATION_MS = 6000;
 const DEV_GLOBAL_PUSH_MOCK_KEY = 'pushMockReminder';
 
+/**
+ * @interface UseReminderBubblesResult
+ * @description `useReminderBubbles` hook 的返回值类型。
+ * @property {Readonly<Ref<ReminderPayload | null>>} activeReminder - 当前活动的提醒，只读。
+ * @property {Readonly<ComputedRef<string>>} activeModuleLabel - 当前活动提醒的模块标签，只读。
+ * @property {Readonly<ComputedRef<string>>} activeTime - 当前活动提醒的显示时间，只读。
+ * @property {boolean} isDev - 是否处于开发环境。
+ * @property {() => void} dismissReminder - 关闭当前活动的提醒。
+ * @property {(module?: ReminderModuleKey) => void} pushMockReminder - 推送一个用于调试的模拟提醒。
+ */
 export interface UseReminderBubblesResult {
   activeReminder: Readonly<Ref<ReminderPayload | null>>;
   activeModuleLabel: Readonly<ComputedRef<string>>;
@@ -29,7 +49,10 @@ export interface UseReminderBubblesResult {
   pushMockReminder: (module?: ReminderModuleKey) => void;
 }
 
-// 提供提醒队列与展示的控制逻辑
+/**
+ * 提供提醒队列与显示控制的逻辑。
+ * @returns {UseReminderBubblesResult}
+ */
 export function useReminderBubbles(): UseReminderBubblesResult {
   const reminderQueue = ref<ReminderPayload[]>([]);
   const internalActiveReminder = ref<ReminderPayload | null>(null);
@@ -62,12 +85,18 @@ export function useReminderBubbles(): UseReminderBubblesResult {
     internalActiveReminder.value = null;
   };
 
+  /**
+   * 安排一个自动关闭当前提醒的计时器。
+   */
   function scheduleAutoDismiss(): void {
     reminderTimer = window.setTimeout(() => {
       dismissReminder();
     }, DISPLAY_DURATION_MS);
   }
 
+  /**
+   * 如果当前没有活动的提醒，则显示队列中的下一个提醒。
+   */
   function showNextReminder(): void {
     if (internalActiveReminder.value) return;
     const next = reminderQueue.value.shift();
@@ -76,11 +105,18 @@ export function useReminderBubbles(): UseReminderBubblesResult {
     scheduleAutoDismiss();
   }
 
+  /**
+   * 关闭当前活动的提醒，并尝试显示下一个。
+   */
   function dismissReminder(): void {
     clearActiveReminder();
     showNextReminder();
   }
 
+  /**
+   * 将一个新的提醒推入队列。
+   * @param {ReminderPayload} payload - 要推送的提醒。
+   */
   const pushReminder = (payload: ReminderPayload) => {
     reminderQueue.value.push(payload);
     showNextReminder();
@@ -92,6 +128,10 @@ export function useReminderBubbles(): UseReminderBubblesResult {
     return mockModules[index] ?? 'progress';
   };
 
+  /**
+   * 推送一个用于调试的模拟提醒。
+   * @param {ReminderModuleKey} [module] - 模拟提醒的模块类型。
+   */
   const pushMockReminder = (module?: ReminderModuleKey) => {
     const selectedModule = module ?? takeMockModule();
     const messageId =

@@ -17,6 +17,11 @@ if (process.platform === 'win32') {
   app.commandLine.appendSwitch('wm-window-animations-disabled');
 }
 
+/**
+ * 解析并返回静态资源的绝对路径。
+ * @param {...string[]} paths - 相对于 `assets` 目录的路径片段。
+ * @returns {string} 静态资源的完整路径。
+ */
 const resolveAssetPath = (...paths: string[]): string => {
   const assetsBase = app.isPackaged
     ? join(process.resourcesPath, 'assets')
@@ -24,10 +29,20 @@ const resolveAssetPath = (...paths: string[]): string => {
   return join(assetsBase, ...paths);
 };
 
+/**
+ * 获取渲染进程的入口 URL。
+ * 在开发环境中，它会返回 Vite 开发服务器的地址。
+ * @returns {string | null} 渲染进程的 URL 或 null。
+ */
 const resolveRendererEntry = (): string | null => {
   return process.env.VITE_DEV_SERVER_URL ?? process.env.MAIN_WINDOW_VITE_DEV_SERVER_URL ?? null;
 };
 
+/**
+ * 为指定的窗口加载渲染进程页面。
+ * @param {BrowserWindow} window - 目标浏览器窗口。
+ * @param {'main' | 'config'} page - 要加载的页面类型 ('main' 或 'config')。
+ */
 const loadRendererPage = (window: BrowserWindow, page: 'main' | 'config'): void => {
   const devServerUrl = resolveRendererEntry();
   const hash = page === 'config' ? '/config' : '/';
@@ -51,6 +66,11 @@ const loadRendererPage = (window: BrowserWindow, page: 'main' | 'config'): void 
   window.loadFile(indexPath, hashOption ? { hash: hashOption } : undefined);
 };
 
+/**
+ * 创建并配置主窗口 (宠物窗口)。
+ * 如果窗口已存在，则直接返回现有实例。
+ * @returns {BrowserWindow} 创建或已存在的主窗口实例。
+ */
 function createWindow(): BrowserWindow {
   if (mainWindow) {
     return mainWindow;
@@ -113,6 +133,11 @@ function createWindow(): BrowserWindow {
   return mainWindow;
 }
 
+/**
+ * 创建并配置配置窗口。
+ * 如果窗口已存在，则直接返回现有实例。
+ * @returns {BrowserWindow} 创建或已存在的配置窗口实例。
+ */
 function createConfigWindow(): BrowserWindow {
   if (configWindow) {
     return configWindow;
@@ -150,6 +175,9 @@ function createConfigWindow(): BrowserWindow {
   return configWindow;
 }
 
+/**
+ * 打开配置窗口，如果窗口不存在则会先创建。
+ */
 function openConfigWindow(): void {
   const window = createConfigWindow();
   if (window.isDestroyed()) {
@@ -161,6 +189,9 @@ function openConfigWindow(): void {
   window.focus();
 }
 
+/**
+ * 创建系统托盘图标及其上下文菜单。
+ */
 function createTray(): void {
   if (tray) {
     return;
@@ -210,6 +241,74 @@ function createTray(): void {
   tray.on('click', toggleWindow);
 }
 
+/**
+ * 初始化并启动提醒调度器。
+ * @returns {Promise<void>}
+ */
+async function initializeReminderScheduler(): Promise<void> {
+  try {
+    const config = await loadAppConfig();
+    ensureScheduler().start(config);
+  } catch (error) {
+    console.error('[main] 初始化提醒调度器失败', error);
+  }
+}
+
+/**
+ * 确保提醒调度器存在，如果不存在则创建一个新的实例。
+ * @returns {ReminderScheduler} 调度器实例。
+ */
+function ensureScheduler(): ReminderScheduler {
+  if (!reminderScheduler) {
+    reminderScheduler = new ReminderScheduler((payload) => {
+      const window = createWindow();
+      if (!window || window.isDestroyed()) {
+        return;
+      }
+      maybeShowSystemNotification(payload, () => {
+        const win = createWindow();
+        if (!win.isDestroyed()) {
+          win.webContents.send('app:will-show');
+          win.show();
+          win.focus();
+        }
+      }).catch((err) => {
+        console.warn('[notify] Failed to show system notification', err);
+      });
+      window.webContents.send('reminder:push', payload);
+    });
+  }
+  return reminderScheduler;
+}
+
+/**
+ * 向渲染进程发送一个隐藏请求，并在收到确认后执行回调。
+ * 用于在隐藏窗口前执行一些清理或动画。
+ * @param {() => void} action - 在收到渲染进程确认后执行的回调函数。
+ */
+function requestRendererExitThen(action: () => void) {
+  const win = createWindow();
+  if (!win || win.isDestroyed()) {
+    action();
+    return;
+  }
+  let done = false;
+  const onAck = (e: Electron.IpcMainEvent) => {
+    if (done) return;
+    if (e.sender === win.webContents) {
+      done = true;
+      ipcMain.removeListener('app:hide-ack', onAck);
+      action();
+    }
+  };
+  ipcMain.on('app:hide-ack', onAck);
+  win.webContents.send('app:will-hide');
+}
+
+// =============================================================================
+// Application Lifecycle Events
+// =============================================================================
+
 app.whenReady().then(async () => {
   try {
     const cfg = await loadAppConfig();
@@ -257,6 +356,10 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
+
+// =============================================================================
+// IPC Handlers
+// =============================================================================
 
 ipcMain.handle('execute-command', async (_, command: string) => {
   try {
@@ -320,54 +423,3 @@ ipcMain.handle('notify:system', async (_event, payload: ReminderPayload) => {
     console.warn('[notify] Failed to show system notification (renderer request)', err);
   }
 });
-
-async function initializeReminderScheduler(): Promise<void> {
-  try {
-    const config = await loadAppConfig();
-    ensureScheduler().start(config);
-  } catch (error) {
-    console.error('[main] 初始化提醒调度器失败', error);
-  }
-}
-
-function ensureScheduler(): ReminderScheduler {
-  if (!reminderScheduler) {
-    reminderScheduler = new ReminderScheduler((payload) => {
-      const window = createWindow();
-      if (!window || window.isDestroyed()) {
-        return;
-      }
-      maybeShowSystemNotification(payload, () => {
-        const win = createWindow();
-        if (!win.isDestroyed()) {
-          win.webContents.send('app:will-show');
-          win.show();
-          win.focus();
-        }
-      }).catch((err) => {
-        console.warn('[notify] Failed to show system notification', err);
-      });
-      window.webContents.send('reminder:push', payload);
-    });
-  }
-  return reminderScheduler;
-}
-
-function requestRendererExitThen(action: () => void) {
-  const win = createWindow();
-  if (!win || win.isDestroyed()) {
-    action();
-    return;
-  }
-  let done = false;
-  const onAck = (e: Electron.IpcMainEvent) => {
-    if (done) return;
-    if (e.sender === win.webContents) {
-      done = true;
-      ipcMain.removeListener('app:hide-ack', onAck);
-      action();
-    }
-  };
-  ipcMain.on('app:hide-ack', onAck);
-  win.webContents.send('app:will-hide');
-}
