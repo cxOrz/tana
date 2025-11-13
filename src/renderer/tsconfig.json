@@ -1,0 +1,12 @@
+{
+  "extends": ["../../tsconfig.base.json", "@vue/tsconfig/tsconfig.dom.json"],
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "isolatedModules": true,
+    "types": ["vite/client"],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["**/*", "../shared/**/*"]
+}

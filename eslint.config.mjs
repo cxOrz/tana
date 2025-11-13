@@ -78,7 +78,7 @@ export default [
 
   // Turn off all formatting-related rules in favor of Prettier
   eslintConfigPrettier,
-  
+
   // Node CJS config files (forge) - allow require/module
   {
     files: ['forge.config.js'],

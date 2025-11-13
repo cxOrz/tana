@@ -1,49 +1,31 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { AnimatedSprite, Application, Assets, Spritesheet } from 'pixi.js';
-import type { SpritesheetData, Texture } from 'pixi.js';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useReminderBubbles } from '../hooks/useReminderBubbles';
+import { usePixiPet } from '../hooks/usePixiPet';
+import ReminderBubble from '../components/ReminderBubble.vue';
 import { Button } from '@/components/ui/button';
-import slimeSheetData from '../assets/slime/slime.json';
-import slimeTextureUrl from '../assets/slime/slime.png';
+
+/**
+ * @file PetView.vue
+ * @description
+ * 宠物的主视图组件。
+ * 负责协调 Pixi.js 动画和提醒气泡 UI 的显示。
+ */
 
 const pixiContainer = ref<HTMLDivElement | null>(null);
-
-let app: Application | null = null;
-let disposed = false;
 const rootEl = ref<HTMLDivElement | null>(null);
 const isExiting = ref(false);
 const isEntering = ref(false);
-const uiScale = ref(1);
 
-const loadSlimeSpritesheet = async (): Promise<Spritesheet> => {
-  const texture = await Assets.load<Texture>(slimeTextureUrl);
-  const sheet = new Spritesheet(texture, slimeSheetData as SpritesheetData);
-  await sheet.parse();
-  return sheet;
-};
+// 使用 hook 管理 Pixi.js 动画
+const { uiScale } = usePixiPet(pixiContainer);
 
+// 使用 hook 管理提醒气泡
 const { activeReminder, activeModuleLabel, activeTime, isDev, dismissReminder, pushMockReminder } =
   useReminderBubbles();
 
-const bubbleBorderClass = computed(() => {
-  const module = activeReminder.value?.module;
-  switch (module) {
-    case 'progress':
-      return 'border-emerald-500/40';
-    case 'income':
-      return 'border-blue-500/40';
-    case 'wellness':
-      return 'border-orange-500/40';
-    case 'surprise':
-      return 'border-pink-500/40';
-    default:
-      return '';
-  }
-});
-
-onMounted(async () => {
-  // 显示：先置入 enter，再下一帧移除以触发过渡
+onMounted(() => {
+  // 监听主进程的窗口显示/隐藏事件
   const offShow = window.electronAPI.onAppWillShow(() => {
     isExiting.value = false;
     isEntering.value = true;
@@ -52,87 +34,21 @@ onMounted(async () => {
     });
   });
 
-  // 隐藏：置 exit，等待过渡完成后回执
   const offHide = window.electronAPI.onAppWillHide(() => {
     isExiting.value = true;
     const el = rootEl.value;
-    const onEnd = () => {
-      window.electronAPI.notifyHideReady();
+    const onEnd = (event: TransitionEvent) => {
+      if (event.target === el) {
+        window.electronAPI.notifyHideReady();
+      }
     };
-    el?.addEventListener('transitionend', onEnd as any, { once: true });
-  });
-  const instance = new Application();
-  await instance.init({
-    backgroundAlpha: 0,
-    // Auto-resize canvas to the window size
-    resizeTo: window as any,
+    el?.addEventListener('transitionend', onEnd, { once: true });
   });
 
-  if (disposed || !pixiContainer.value) {
-    instance.destroy();
-    return;
-  }
-
-  pixiContainer.value.appendChild(instance.canvas);
-  app = instance;
-  instance.canvas.classList.add('w-full', 'h-full', 'block');
-
-  const spritesheet = await loadSlimeSpritesheet();
-
-  if (disposed || !app) {
-    return;
-  }
-
-  const frames = Object.entries(spritesheet.textures)
-    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-    .map(([, texture]) => texture);
-
-  const slime = new AnimatedSprite(frames);
-  slime.anchor.set(0.5);
-  // Base logical size for scale computation (matches main BASE_WINDOW)
-  const BASE_WIDTH = 450;
-  const BASE_HEIGHT = 360;
-  // center and scale to current screen size
-  const applyLayout = () => {
-    if (!app) return;
-    const scaleX = app.screen.width / BASE_WIDTH;
-    const scaleY = app.screen.height / BASE_HEIGHT;
-    const uniform = Math.min(scaleX, scaleY);
-    slime.scale.set(uniform);
-    slime.position.set(app.screen.width / 2, app.screen.height / 2);
-    // UI bubble scales down on small windows to avoid covering the scene
-    uiScale.value = Math.min(1, Math.max(0.7, uniform));
-  };
-  applyLayout();
-  slime.animationSpeed = 0.03;
-  slime.play();
-
-  app.stage.addChild(slime);
-
-  // Keep slime centered on window resize
-  const onResize = () => applyLayout();
-  // Use window resize which tracks BrowserWindow content size changes
-  window.addEventListener('resize', onResize);
-
-  // cleanup listeners when unmount
   onBeforeUnmount(() => {
     offShow?.();
     offHide?.();
-    window.removeEventListener('resize', onResize);
   });
-});
-
-onBeforeUnmount(() => {
-  disposed = true;
-
-  if (app) {
-    const view = app.canvas;
-    if (view.parentNode) {
-      view.parentNode.removeChild(view);
-    }
-    app.destroy();
-    app = null;
-  }
 });
 </script>
 
@@ -143,6 +59,7 @@ onBeforeUnmount(() => {
     :class="{ 'app-enter': isEntering, 'app-exit': isExiting }"
   >
     <div ref="pixiContainer" class="relative flex h-full w-full items-center justify-center">
+      <!-- 提醒气泡 UI -->
       <div class="pointer-events-none absolute right-4 top-4">
         <Transition
           enter-active-class="transition duration-200 ease-out"
@@ -152,39 +69,22 @@ onBeforeUnmount(() => {
           leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-1.5"
         >
-          <div
+          <ReminderBubble
             v-if="activeReminder"
-            :key="activeReminder.messageId"
-            class="pointer-events-auto min-w-[160px] max-w-60 rounded-[14px] border bg-slate-900/90 px-4 pt-3.5 pb-3 text-sm font-normal leading-relaxed text-slate-100 shadow-[0_16px_28px_rgba(15,23,42,0.28)] backdrop-blur no-drag"
+            :reminder="activeReminder"
+            :module-label="activeModuleLabel"
+            :time="activeTime"
             :style="{
               transform: `scale(${uiScale})`,
               transformOrigin: 'top right',
               maxWidth: 'min(280px, 80vw)',
             }"
-            :class="bubbleBorderClass"
-          >
-            <div class="mb-1.5 flex items-center justify-between">
-              <span class="font-semibold tracking-[0.4px]">
-                {{ activeModuleLabel }}
-              </span>
-              <button
-                type="button"
-                class="flex h-[22px] w-[22px] items-center justify-center rounded-xl border-0 bg-slate-400/20 p-0 text-base leading-none text-slate-100 transition hover:bg-slate-400/35 no-drag"
-                @click="dismissReminder"
-              >
-                ×
-              </button>
-            </div>
-            <div class="wrap-break-word text-slate-200/90">
-              {{ activeReminder.text }}
-            </div>
-            <div v-if="activeTime" class="mt-2 text-right text-xs text-slate-200/60">
-              {{ activeTime }}
-            </div>
-          </div>
+            @dismiss="dismissReminder"
+          />
         </Transition>
       </div>
 
+      <!-- 调试按钮 (仅开发模式) -->
       <Button
         v-if="isDev"
         variant="outline"
@@ -204,11 +104,11 @@ body {
   background-color: transparent;
 }
 
-/* window fade transitions */
+/* 窗口淡入淡出过渡 */
 .app-shell {
   opacity: 1;
   transition: opacity 220ms ease;
-  -webkit-app-region: drag;
+  -webkit-app-region: drag; /* 允许拖动窗口 */
 }
 .app-enter {
   opacity: 0;
@@ -218,6 +118,6 @@ body {
 }
 
 .no-drag {
-  -webkit-app-region: no-drag;
+  -webkit-app-region: no-drag; /* 局部禁止拖动 */
 }
 </style>
