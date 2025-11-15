@@ -1,4 +1,4 @@
-# Tana Desktop Pet
+# Tana 桌面宠物
 
 Tana 是一款常驻桌面的可爱史莱姆宠物，它能帮你提醒专注、收益、健康状态，还会偶尔送来惊喜。项目基于 Electron + Vue 3 + Pixi.js 构建，可一键打包成跨平台桌面应用。
 
@@ -68,30 +68,30 @@ npm run make
 
 ```
 .
-├── assets/                  # Electron 相关的静态资源 (应用图标等)
+├── assets/                  # 静态资源 (应用图标等)
 ├── src/
 │   ├── main/                # Electron 主进程代码
 │   │   ├── services/        # 主进程服务模块
 │   │   ├── appConfig.json   # 默认提醒配置模板
 │   │   ├── config.ts        # 配置加载逻辑
 │   │   ├── main.ts          # 应用主入口
-│   │   ├── preload.ts       # 预加载脚本，用于进程间通信
+│   │   ├── preload.ts       # 预加载脚本
 │   │   └── reminderScheduler.ts # 提醒调度器
 │   ├── renderer/            # 渲染进程代码 (Vue 3)
-│   │   ├── assets/          # 前端静态资源 (图片、字体等)
+│   │   ├── assets/          # 前端静态资源
 │   │   ├── components/      # Vue 组件
 │   │   ├── hooks/           # Composition API Hooks
 │   │   ├── views/           # 视图组件
 │   │   ├── App.vue          # 根组件
 │   │   └── main.ts          # Vue 应用入口
-│   └── shared/              # 主进程与渲染进程共享的类型定义
+│   └── shared/              # 共享类型定义
 ├── forge.config.js          # Electron Forge 打包配置
 └── package.json             # 项目依赖与脚本
 ```
 
 ## 🧩 配置说明
 
-应用的提醒功能由一个 JSON 文件驱动。首次启动时，应用会将 `src/main/appConfig.json` 的内容复制到用户数据目录中（例如，Linux 上的 `~/.config/Tana Desktop Pet/config/appConfig.json`）。之后所有的配置读取和修改都将基于用户目录中的这个文件。
+应用的提醒功能由一个 JSON 文件驱动。首次启动时，应用会将 `src/main/appConfig.json` 的内容复制到用户数据目录中（例如，Linux 上的 `~/.config/Tana/config/appConfig.json`）。之后所有的配置读取和修改都将基于用户目录中的这个文件。
 
 要恢复默认配置，只需删除用户目录下的配置文件，应用下次启动时会重新生成。
 
@@ -99,7 +99,7 @@ npm run make
 
 - `baseIntervalMinutes`: 调度器的基础轮询时间间隔（分钟）。
 - `reminders`: 包含各类提醒的配置。
-  - `progress`, `income`, `health`, `surprise` 等模块可以分别配置 `triggers` (触发器), `messages` (消息列表), 和 `cooldownMinutes` (冷却时间)。
+  - `progress`, `income`, `wellness`, `surprise` 等模块可以分别配置 `triggers` (触发器), `messages` (消息列表), 和 `cooldownMinutes` (冷却时间)。
 - `incomeConfig`: `income` 模块专属，用于配置工作时段、时薪等。
 - `randomStrategy`: `surprise` 模块专属，用于配置随机触发的策略。
 
@@ -112,13 +112,8 @@ npm run make
 1.  **Fork 仓库** 并从 `main` 分支创建您的开发分支。
 2.  **编码风格**: 请遵循项目已有的编码风格（TypeScript, 2 空格缩进, 使用分号）。
 3.  **提交信息**: 请使用 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/v1.0.0/) 规范编写提交信息，格式为 `type(scope): summary`。
-    - `feat`: 新功能
-    - `fix`: 修复 Bug
-    - `docs`: 文档更新
-    - `style`: 代码格式调整
-    - `refactor`: 代码重构
-    - `test`: 添加或修改测试
-4.  **发起 Pull Request**: 提交您的更改，并详细说明您所做的修改。
+4.  **AI Agent 开发**: 如果您是 AI Agent，请务必阅读 `AGENTS.md` 文件，以了解项目的架构和开发规范。
+5.  **发起 Pull Request**: 提交您的更改，并详细说明您所做的修改。
 
 ## 📄 许可证
 
