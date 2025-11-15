@@ -1,3 +1,10 @@
+/**
+ * @file config.ts
+ * @description
+ * 负责加载、保存和管理应用的用户配置。
+ * 配置文件存储在用户数据目录中，并在首次启动时根据 `appConfig.json` 模板创建。
+ * 提供配置的合并、清理和验证功能，以确保应用的健壮性。
+ */
 import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { join } from 'path';

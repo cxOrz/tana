@@ -1,3 +1,10 @@
+/**
+ * @file main.ts
+ * @description
+ * 渲染进程的入口点。
+ * 负责初始化 Vue 应用、设置路由，并将根组件挂载到 DOM 中。
+ * 同时，它还会初始化颜色方案的检测。
+ */
 import { createApp } from 'vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
 import App from './App.vue';

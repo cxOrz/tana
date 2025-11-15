@@ -21,7 +21,9 @@ declare global {
        * @param {string} command - 要执行的命令字符串。
        * @returns {Promise<{ success: boolean; command: string; note: string }>} 命令执行的结果。
        */
-      executeCommand: (command: string) => Promise<{ success: boolean; command: string; note: string }>;
+      executeCommand: (
+        command: string
+      ) => Promise<{ success: boolean; command: string; note: string }>;
 
       /**
        * 从主进程加载应用配置。

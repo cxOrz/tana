@@ -1,6 +1,10 @@
 import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'path';
-import { CONFIG_WINDOW_DEFAULT_SIZE, IPC_CHANNELS, PET_WINDOW_BASE_SIZE } from '../shared/constants';
+import {
+  CONFIG_WINDOW_DEFAULT_SIZE,
+  IPC_CHANNELS,
+  PET_WINDOW_BASE_SIZE,
+} from '../shared/constants';
 import { resolveAssetPath } from './utils';
 
 /**
