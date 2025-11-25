@@ -4,11 +4,11 @@ This document provides a comprehensive guide for AI agents developing the Tana D
 
 ## 1. Project Overview
 
-Tana is a desktop pet application built with **Electron**, **Vue 3**, and **Pixi.js**. Its purpose is to provide users with timely reminders for focus, health, and income tracking in an engaging and non-intrusive way.
+Tana is a desktop pet application built with **Electron**, **Vue 3**, and **Pixi.js**. It provides gentle daily reminders and lightweight journaling/daily-report capabilities.
 
-- **Electron**: The application framework, responsible for creating and managing windows, system tray integration, and inter-process communication (IPC).
-- **Vue 3**: The UI framework for the renderer process, used to create the user interface, including the reminder bubbles and configuration screen.
-- **Pixi.js**: A 2D rendering engine used to display and animate the pet character.
+- **Electron**: Application framework for windows, tray integration, and IPC.
+- **Vue 3**: UI framework for the renderer process, including reminder bubbles and journal/report screens.
+- **Pixi.js**: 2D rendering engine for the pet character and animations.
 
 ## 2. Core Architectural Principles
 
@@ -18,7 +18,7 @@ Tana is a desktop pet application built with **Electron**, **Vue 3**, and **Pixi
   - `src/shared`: A dedicated directory for TypeScript types, constants, and utilities that are shared between the main and renderer processes.
 - **Modularity**: The main process logic is further modularized into services, such as `windowManager.ts`, `trayManager.ts`, and `reminderScheduler.ts`, each with a single responsibility.
 - **Security**: The preload script (`src/main/preload.ts`) acts as a secure bridge between the renderer and main processes, exposing only a limited and well-defined API to the renderer.
-- **Configuration-Driven**: The application's behavior is driven by a JSON configuration file (`appConfig.json`), which is copied to the user's data directory on first launch. This allows for easy customization of reminders and other settings.
+- **Configuration-Driven**: Behavior is defined in `src/main/appConfig.json` (shipped with the app) and loaded on startup for reminders and journaling settings.
 
 ## 3. Development Workflow
 
@@ -29,19 +29,19 @@ Tana is a desktop pet application built with **Electron**, **Vue 3**, and **Pixi
 
 ### 3.2. Key Development Tasks
 
-- **Adding a New Reminder Module**:
-  1.  Define the new module's key in `src/shared/reminderTypes.d.ts`.
-  2.  Add the module's configuration to `src/main/appConfig.json`.
-  3.  Update the `ReminderConfigMap` in `src/shared/configTypes.d.ts` to include the new module.
-  4.  Implement the module's logic in the `ReminderScheduler` (`src/main/reminderScheduler.ts`).
-- **Modifying the UI**:
-  1.  Create or update Vue components in `src/renderer/components`.
-  2.  Use Vue hooks (`src/renderer/hooks`) to encapsulate complex UI logic.
-  3.  Follow the existing styling conventions, using Tailwind CSS classes whenever possible.
-- **Adding IPC Channels**:
-  1.  Define the new channel name in `src/shared/constants.ts`.
-  2.  Register the handler in the main process (`src/main/ipcHandlers.ts`).
-  3.  Expose the API to the renderer process in the preload script (`src/main/preload.ts`).
+- **Reminder adjustments**:
+  1. Define module keys in `src/shared/reminderTypes.d.ts` if introducing new ones.
+  2. Add defaults to `src/main/appConfig.json`.
+  3. Update `ReminderConfigMap` in `src/shared/configTypes.d.ts`.
+  4. Implement scheduling in `src/main/reminderScheduler.ts`; update notification/bubble rendering as needed.
+- **UI changes**:
+  1. Create or update Vue components in `src/renderer/components`.
+  2. Use Vue hooks (`src/renderer/hooks`) for complex UI logic.
+  3. Follow existing styling conventions, using Tailwind CSS where possible.
+- **Adding IPC channels**:
+  1. Define channel names in `src/shared/constants.ts`.
+  2. Register handlers in `src/main/ipcHandlers.ts`.
+  3. Expose APIs to the renderer in `src/main/preload.ts`.
 
 ### 3.3. Code Quality and Formatting
 
@@ -62,7 +62,9 @@ Tana is a desktop pet application built with **Electron**, **Vue 3**, and **Pixi
 
 - `src/main/main.ts`: The application's main entry point.
 - `src/main/preload.ts`: The secure bridge between the main and renderer processes.
-- `src/main/reminderScheduler.ts`: The core logic for scheduling and triggering reminders.
+- `src/main/reminderScheduler.ts`: The core logic for scheduling and triggering reminders (daily module).
+- `src/main/services/notifications.ts`: System notification bridge for reminders.
+- `src/renderer/hooks/useReminderBubbles.ts` & `src/renderer/components/ReminderBubble.vue`: Reminder UI queueing and display in the renderer.
 - `src/renderer/views/PetView.vue`: The main view component for the pet.
 - `src/shared/constants.ts`: Shared constants, including IPC channel names.
 - `AGENTS.md`: This file.

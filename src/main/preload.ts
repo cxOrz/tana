@@ -1,19 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { AppConfig, ReminderPayload } from '../shared';
+import type { ReminderPayload } from '../shared';
+import type { AddJournalEntryInput, JournalDay, JournalSummary } from '../shared/journalTypes';
 import { IPC_CHANNELS } from '../shared/constants';
-
-/**
- * @typedef {object} ElectronAPI
- * @property {(command: string) => Promise<any>} executeCommand - 执行一个在主进程中定义的命令。
- * @property {() => Promise<AppConfig>} loadAppConfig - 从主进程加载应用配置。
- * @property {(config: AppConfig) => Promise<AppConfig>} saveAppConfig - 将应用配置保存到主进程。
- * @property {() => Promise<void>} openConfigWindow - 请求主进程打开配置窗口。
- * @property {(callback: () => void) => () => void} onAppWillHide - 注册一个在应用即将隐藏时触发的回调。
- * @property {(callback: () => void) => () => void} onAppWillShow - 注册一个在应用即将显示时触发的回调。
- * @property {() => void} notifyHideReady - 通知主进程渲染器已经准备好隐藏。
- * @property {(callback: (payload: ReminderPayload) => void) => () => void} onReminder - 注册一个用于接收提醒事件的回调。
- * @property {(payload: ReminderPayload) => Promise<void>} notifySystem - 请求主进程显示一个系统通知。
- */
 
 /**
  * 定义并暴露给渲染进程的API。
@@ -21,33 +9,6 @@ import { IPC_CHANNELS } from '../shared/constants';
  * @type {ElectronAPI}
  */
 const electronAPI = {
-  /**
-   * 执行一个在主进程中定义的命令。
-   * @param {string} command - 要执行的命令字符串。
-   * @returns {Promise<any>} 命令执行的结果。
-   */
-  executeCommand: (command: string) => ipcRenderer.invoke(IPC_CHANNELS.EXECUTE_COMMAND, command),
-
-  /**
-   * 从主进程加载应用配置。
-   * @returns {Promise<AppConfig>} 应用的当前配置。
-   */
-  loadAppConfig: (): Promise<AppConfig> => ipcRenderer.invoke(IPC_CHANNELS.LOAD_CONFIG),
-
-  /**
-   * 将应用配置保存到主进程。
-   * @param {AppConfig} config - 要保存的应用配置。
-   * @returns {Promise<AppConfig>} 保存后的配置。
-   */
-  saveAppConfig: (config: AppConfig): Promise<AppConfig> =>
-    ipcRenderer.invoke(IPC_CHANNELS.SAVE_CONFIG, config),
-
-  /**
-   * 请求主进程打开配置窗口。
-   * @returns {Promise<void>}
-   */
-  openConfigWindow: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.OPEN_CONFIG_WINDOW),
-
   /**
    * 注册一个在应用即将隐藏时触发的回调。
    * @param {() => void} callback - 回调函数。
@@ -97,6 +58,58 @@ const electronAPI = {
    */
   notifySystem: (payload: ReminderPayload) =>
     ipcRenderer.invoke(IPC_CHANNELS.SHOW_SYSTEM_NOTIFICATION, payload),
+
+  /**
+   * 写入一条日志记录。
+   * @param {AddJournalEntryInput} input - 记录内容。
+   * @returns {Promise<any>} 持久化后的记录。
+   */
+  addJournalEntry: (input: AddJournalEntryInput) =>
+    ipcRenderer.invoke(IPC_CHANNELS.JOURNAL_ADD_ENTRY, input),
+
+  /**
+   * 获取某一天的日志数据。
+   * @param {string} [dayStamp] - 目标日期，默认当天。
+   * @returns {Promise<JournalDay>}
+   */
+  getJournalDay: (dayStamp?: string): Promise<JournalDay> =>
+    ipcRenderer.invoke(IPC_CHANNELS.JOURNAL_GET_DAY, dayStamp),
+
+  /**
+   * 列出已有日期。
+   * @param {number} [limit] - 限制数量。
+   * @returns {Promise<string[]>}
+   */
+  listJournalDays: (limit?: number): Promise<string[]> =>
+    ipcRenderer.invoke(IPC_CHANNELS.JOURNAL_LIST_DAYS, limit),
+
+  /**
+   * 写入日报摘要。
+   * @param {string} dayStamp - 日期。
+   * @param {JournalSummary} summary - 摘要。
+   * @returns {Promise<JournalSummary>}
+   */
+  setJournalSummary: (dayStamp: string, summary: JournalSummary): Promise<JournalSummary> =>
+    ipcRenderer.invoke(IPC_CHANNELS.JOURNAL_SET_SUMMARY, dayStamp, summary),
+
+  /**
+   * 打开日报窗口。
+   * @param {string} [dayStamp] - 目标日期。
+   * @returns {Promise<void>}
+   */
+  openJournalReport: (dayStamp?: string): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.JOURNAL_OPEN_REPORT, dayStamp),
+
+  /**
+   * 监听主进程发来的“打开日报”事件。
+   * @param {(dayStamp?: string) => void} callback - 回调。
+   * @returns {() => void} 取消监听函数。
+   */
+  onJournalOpenReport: (callback: (dayStamp?: string) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, dayStamp?: string) => callback(dayStamp);
+    ipcRenderer.on(IPC_CHANNELS.JOURNAL_OPEN_REPORT, listener);
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.JOURNAL_OPEN_REPORT, listener);
+  },
 };
 
 // 在 window 对象上声明 electronAPI 类型

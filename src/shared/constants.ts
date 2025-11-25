@@ -16,20 +16,6 @@ export const PET_WINDOW_BASE_SIZE = {
 };
 
 /**
- * 配置窗口的默认尺寸。
- * @property {number} WIDTH - 默认宽度。
- * @property {number} HEIGHT - 默认高度。
- * @property {number} MIN_WIDTH - 最小宽度。
- * @property {number} MIN_HEIGHT - 最小高度。
- */
-export const CONFIG_WINDOW_DEFAULT_SIZE = {
-  WIDTH: 960,
-  HEIGHT: 720,
-  MIN_WIDTH: 840,
-  MIN_HEIGHT: 600,
-};
-
-/**
  * Electron IPC 通道的名称。
  * 使用枚举或对象可以避免在代码中使用裸字符串，从而减少拼写错误。
  */
@@ -42,16 +28,15 @@ export const IPC_CHANNELS = {
   // Reminders
   PUSH_REMINDER: 'reminder:push',
 
-  // Commands
-  EXECUTE_COMMAND: 'execute-command',
-
-  // Config
-  LOAD_CONFIG: 'config:load',
-  SAVE_CONFIG: 'config:save',
-  OPEN_CONFIG_WINDOW: 'config:open',
-
   // Notifications
   SHOW_SYSTEM_NOTIFICATION: 'notify:system',
+
+  // Journal
+  JOURNAL_ADD_ENTRY: 'journal:add-entry',
+  JOURNAL_GET_DAY: 'journal:get-day',
+  JOURNAL_LIST_DAYS: 'journal:list-days',
+  JOURNAL_SET_SUMMARY: 'journal:set-summary',
+  JOURNAL_OPEN_REPORT: 'journal:open-report',
 };
 
 /**

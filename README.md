@@ -1,12 +1,13 @@
 # Tana 桌面宠物
 
-Tana 是一款常驻桌面的可爱史莱姆宠物，它能帮你提醒专注、收益、健康状态，还会偶尔送来惊喜。项目基于 Electron + Vue 3 + Pixi.js 构建，可一键打包成跨平台桌面应用。
+Tana 是一款常驻桌面的可爱史莱姆宠物，它能按节奏推送日常提醒，并提供轻量的日报。项目基于 Electron + Vue 3 + Pixi.js 构建，可一键打包成跨平台桌面应用。
 
 ## ✨ 核心特性
 
 - **生动的桌面宠物**：基于 Pixi.js 渲染，拥有流畅的动画效果。窗口透明、无边框、始终置顶，确保 Tana 在不打扰您工作的同时，也能时刻陪伴。
-- **智能提醒系统**：内置进度、收益、健康和惊喜四种提醒模块。提醒内容和触发条件高度可配置，让 Tana 成为您的专属小助手。
-- **灵活的调度机制**：主进程中的 `ReminderScheduler` 统一管理所有提醒事件，支持按固定时间间隔、随机概率等多种策略进行调度。
+- **智能提醒系统**：内置日常提醒模块，按固定时间间隔推送关怀与节奏提示。
+- **调度与通知**：主进程中的 `ReminderScheduler` 统一管理提醒事件，日志调度器每日定时推送日报通知。
+- **记忆/日志**：一键唤起快速输入（默认 `Alt+J`），即时把想法写入本地。每天 18:00 自动推送日报通知，点击可查看当日 Markdown 摘要与条目列表。
 - **安全可靠的进程通信**：采用 Electron 的 `preload.ts` 脚本，严格限制渲染进程可访问的 API，确保了主进程的安全性。
 - **现代化的开发体验**：集成 Vite 实现毫秒级的热更新，代码库全面拥抱 TypeScript，并使用 Electron Forge 实现一键构建和打包。
 
@@ -98,10 +99,8 @@ npm run make
 ### 配置项示例
 
 - `baseIntervalMinutes`: 调度器的基础轮询时间间隔（分钟）。
-- `reminders`: 包含各类提醒的配置。
-  - `progress`, `income`, `wellness`, `surprise` 等模块可以分别配置 `triggers` (触发器), `messages` (消息列表), 和 `cooldownMinutes` (冷却时间)。
-- `incomeConfig`: `income` 模块专属，用于配置工作时段、时薪等。
-- `randomStrategy`: `surprise` 模块专属，用于配置随机触发的策略。
+- `reminders`: 包含提醒配置。目前仅有 `daily` 模块，可配置 `triggers` (触发器)、`messages` (消息列表)、`defaultIntervalMinutes` 与 `cooldownMinutes`。
+- `journal`: 日志/日报配置，如 `dailyReportTime`（日报时间，HH:mm）、`hotkey`（快速输入快捷键）、`notifyEnabled`（是否推送日报通知）。
 
 更新配置后，需要重启应用才能生效。
 

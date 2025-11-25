@@ -7,13 +7,10 @@
 
 /**
  * 提醒模块的唯一标识符。
- * - `progress`: 进度/专注提醒
- * - `income`: 收益提醒
- * - `wellness`: 健康提醒
- * - `surprise`: 惊喜提醒
- * @typedef {('progress' | 'income' | 'wellness' | 'surprise')} ReminderModuleKey
+ * - `daily`: 日常提醒（合并原收益/健康）
+ * @typedef {('daily')} ReminderModuleKey
  */
-export type ReminderModuleKey = 'progress' | 'income' | 'wellness' | 'surprise';
+export type ReminderModuleKey = 'daily';
 
 /**
  * 通过 IPC 通道在主进程和渲染进程之间传递的提醒事件的数据负载。

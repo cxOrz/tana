@@ -1,7 +1,7 @@
 /**
  * @file config.ts
  * @description
- * 负责加载、保存和管理应用的用户配置。
+ * 负责加载和管理应用配置。
  * 配置文件存储在用户数据目录中，并在首次启动时根据 `appConfig.json` 模板创建。
  * 提供配置的合并、清理和验证功能，以确保应用的健壮性。
  */
@@ -9,21 +9,12 @@ import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import rawDefaultConfig from './appConfig.json';
-import type {
-  AppConfig,
-  IncomeReminderModule,
-  ReminderMessage,
-  ReminderModule,
-  SurpriseModule,
-  TriggerConfig,
-} from '../shared';
+import type { AppConfig, ReminderMessage, ReminderModule, TriggerConfig } from '../shared';
 
 export type {
   AppConfig,
-  IncomeReminderModule,
   ReminderMessage,
   ReminderModule,
-  SurpriseModule,
   TriggerConfig,
 };
 
@@ -94,44 +85,18 @@ export async function loadAppConfig(): Promise<AppConfig> {
 }
 
 /**
- * 将应用配置保存到文件。
- * 保存前会与默认配置合并并进行 sanitize。
- * @param {AppConfig} config - 需要保存的应用配置。
- * @returns {Promise<AppConfig>} 合并并 sanitize 后的配置。
- */
-export async function saveAppConfig(config: AppConfig): Promise<AppConfig> {
-  await ensureConfigDir();
-  const configPath = resolveConfigPath();
-  const merged = sanitizeConfig(mergeWithDefaults(config));
-  await fs.writeFile(configPath, JSON.stringify(merged, null, 2), 'utf-8');
-  return merged;
-}
-
-/**
  * 将部分配置与默认配置进行深度合并。
  * @param {Partial<AppConfig>} partial - 需要合并的部分配置。
  * @returns {AppConfig} 合并后的完整配置。
  */
 export function mergeWithDefaults(partial: Partial<AppConfig>): AppConfig {
-  const progressOverrides = partial.reminders?.progress as Partial<ReminderModule> | undefined;
-  const incomeOverrides = partial.reminders?.income as Partial<IncomeReminderModule> | undefined;
-  const wellnessOverrides = partial.reminders?.wellness as Partial<ReminderModule> | undefined;
-  const surpriseOverrides = partial.reminders?.surprise as Partial<SurpriseModule> | undefined;
+  const dailyOverrides = partial.reminders?.daily as Partial<ReminderModule> | undefined;
 
   return {
     ...DEFAULT_CONFIG,
     ...partial,
     reminders: {
-      progress: mergeReminderModule(DEFAULT_CONFIG.reminders.progress, progressOverrides),
-      income: mergeIncomeModule(
-        DEFAULT_CONFIG.reminders.income as IncomeReminderModule,
-        incomeOverrides
-      ),
-      wellness: mergeReminderModule(DEFAULT_CONFIG.reminders.wellness, wellnessOverrides),
-      surprise: mergeSurpriseModule(
-        DEFAULT_CONFIG.reminders.surprise as SurpriseModule,
-        surpriseOverrides
-      ),
+      daily: mergeReminderModule(DEFAULT_CONFIG.reminders.daily, dailyOverrides),
     },
   };
 }
@@ -153,44 +118,6 @@ function mergeReminderModule<T extends ReminderModule>(base: T, overrides?: Part
     ...overrides,
     triggers: cloneArray(overrides?.triggers, base.triggers),
     messages: cloneArray(overrides?.messages, base.messages),
-  };
-}
-
-/**
- * 合并收入提醒模块的配置。
- * @param {IncomeReminderModule} base - 基础收入提醒模块配置。
- * @param {Partial<IncomeReminderModule>} [overrides] - 需要覆盖的配置。
- * @returns {IncomeReminderModule} 合并后的收入提醒模块配置。
- */
-function mergeIncomeModule(
-  base: IncomeReminderModule,
-  overrides?: Partial<IncomeReminderModule>
-): IncomeReminderModule {
-  return {
-    ...mergeReminderModule(base, overrides),
-    incomeConfig: {
-      ...base.incomeConfig,
-      ...overrides?.incomeConfig,
-    },
-  };
-}
-
-/**
- * 合并惊喜提醒模块的配置。
- * @param {SurpriseModule} base - 基础惊喜提醒模块配置。
- * @param {Partial<SurpriseModule>} [overrides] - 需要覆盖的配置。
- * @returns {SurpriseModule} 合并后的惊喜提醒模块配置。
- */
-function mergeSurpriseModule(
-  base: SurpriseModule,
-  overrides?: Partial<SurpriseModule>
-): SurpriseModule {
-  return {
-    ...mergeReminderModule(base, overrides),
-    randomStrategy: {
-      ...base.randomStrategy,
-      ...overrides?.randomStrategy,
-    },
   };
 }
 

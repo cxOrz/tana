@@ -1,10 +1,6 @@
 import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'path';
-import {
-  CONFIG_WINDOW_DEFAULT_SIZE,
-  IPC_CHANNELS,
-  PET_WINDOW_BASE_SIZE,
-} from '../shared/constants';
+import { IPC_CHANNELS, PET_WINDOW_BASE_SIZE } from '../shared/constants';
 import { resolveAssetPath } from './utils';
 
 /**
@@ -14,7 +10,8 @@ import { resolveAssetPath } from './utils';
  */
 
 let mainWindow: BrowserWindow | null = null;
-let configWindow: BrowserWindow | null = null;
+let journalInputWindow: BrowserWindow | null = null;
+let journalReportWindow: BrowserWindow | null = null;
 
 let initialWindowSize = {
   width: PET_WINDOW_BASE_SIZE.WIDTH,
@@ -34,9 +31,17 @@ function resolveRendererEntry(): string | null {
  * @param {BrowserWindow} window - 目标窗口。
  * @param {'main' | 'config'} page - 要加载的页面。
  */
-function loadRendererPage(window: BrowserWindow, page: 'main' | 'config'): void {
+function loadRendererPage(
+  window: BrowserWindow,
+  page: 'main' | 'journal' | 'journal-input'
+): void {
   const devServerUrl = resolveRendererEntry();
-  const hash = page === 'config' ? '/config' : '/';
+  const hash =
+    page === 'journal'
+      ? '/journal'
+      : page === 'journal-input'
+      ? '/journal-input'
+      : '/';
 
   if (devServerUrl) {
     const url = new URL(devServerUrl);
@@ -53,7 +58,8 @@ function loadRendererPage(window: BrowserWindow, page: 'main' | 'config'): void 
   }
 
   const indexPath = join(__dirname, '../renderer/index.html');
-  const hashOption = page === 'config' ? 'config' : undefined;
+  const hashOption =
+    page === 'journal' ? 'journal' : page === 'journal-input' ? 'journal-input' : undefined;
   window.loadFile(indexPath, hashOption ? { hash: hashOption } : undefined);
 }
 
@@ -125,23 +131,24 @@ export function createMainWindow(isQuitting: () => boolean): BrowserWindow {
 }
 
 /**
- * 创建配置窗口。
+ * 创建快速输入窗口。
  * @returns {BrowserWindow}
  */
-export function createConfigWindow(): BrowserWindow {
-  if (configWindow) {
-    return configWindow;
+export function createJournalInputWindow(): BrowserWindow {
+  if (journalInputWindow) {
+    return journalInputWindow;
   }
 
-  configWindow = new BrowserWindow({
-    width: CONFIG_WINDOW_DEFAULT_SIZE.WIDTH,
-    height: CONFIG_WINDOW_DEFAULT_SIZE.HEIGHT,
-    minWidth: CONFIG_WINDOW_DEFAULT_SIZE.MIN_WIDTH,
-    minHeight: CONFIG_WINDOW_DEFAULT_SIZE.MIN_HEIGHT,
+  journalInputWindow = new BrowserWindow({
+    width: 420,
+    height: 260,
+    resizable: false,
+    autoHideMenuBar: true,
+    frame: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    transparent: true,
     show: false,
-    autoHideMenuBar: false,
-    resizable: true,
-    backgroundColor: '#0f172aff',
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
       sandbox: false,
@@ -151,18 +158,57 @@ export function createConfigWindow(): BrowserWindow {
     },
   });
 
-  configWindow.on('closed', () => {
-    configWindow = null;
+  journalInputWindow.on('closed', () => {
+    journalInputWindow = null;
   });
 
-  loadRendererPage(configWindow, 'config');
+  loadRendererPage(journalInputWindow, 'journal-input');
 
-  configWindow.once('ready-to-show', () => {
-    configWindow?.show();
-    configWindow?.focus();
+  journalInputWindow.once('ready-to-show', () => {
+    journalInputWindow?.show();
+    journalInputWindow?.focus();
   });
 
-  return configWindow;
+  return journalInputWindow;
+}
+
+/**
+ * 创建日报窗口。
+ * @returns {BrowserWindow}
+ */
+export function createJournalReportWindow(): BrowserWindow {
+  if (journalReportWindow) {
+    return journalReportWindow;
+  }
+
+  journalReportWindow = new BrowserWindow({
+    width: 720,
+    height: 860,
+    resizable: true,
+    autoHideMenuBar: true,
+    frame: true,
+    show: false,
+    webPreferences: {
+      preload: join(__dirname, 'preload.js'),
+      sandbox: false,
+      nodeIntegration: false,
+      contextIsolation: true,
+      backgroundThrottling: false,
+    },
+  });
+
+  journalReportWindow.on('closed', () => {
+    journalReportWindow = null;
+  });
+
+  loadRendererPage(journalReportWindow, 'journal');
+
+  journalReportWindow.once('ready-to-show', () => {
+    journalReportWindow?.show();
+    journalReportWindow?.focus();
+  });
+
+  return journalReportWindow;
 }
 
 /**

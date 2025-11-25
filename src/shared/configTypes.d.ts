@@ -46,16 +46,19 @@ export interface AppConfig {
    * @type {NotificationConfig | undefined}
    */
   notifications?: NotificationConfig;
+
+  /**
+   * 日志/记忆功能的配置。
+   * @type {JournalConfig | undefined}
+   */
+  journal?: JournalConfig;
 }
 
 /**
  * 提醒模块配置的映射表。
  * 键是模块的唯一标识符。
  */
-export type ReminderConfigMap = Record<
-  ReminderModuleKey,
-  ReminderModule | IncomeReminderModule | SurpriseModule
->;
+export type ReminderConfigMap = Record<ReminderModuleKey, ReminderModule>;
 
 /**
  * 基础提醒模块的配置。
@@ -90,74 +93,6 @@ export interface ReminderModule {
    * @type {ReminderMessage[]}
    */
   messages: ReminderMessage[];
-}
-
-/**
- * 收入提醒模块的特定配置。
- */
-export interface IncomeReminderModule extends ReminderModule {
-  /**
-   * 收入相关的配置。
-   */
-  incomeConfig: {
-    /**
-     * 时薪。
-     * @type {number}
-     */
-    hourlyRate: number;
-
-    /**
-     * 货币单位。
-     * @type {string}
-     */
-    currency: string;
-
-    /**
-     * 工作日开始时间 (格式: HH:mm)。
-     * @type {string}
-     */
-    workdayStart: string;
-
-    /**
-     * 工作日结束时间 (格式: HH:mm)。
-     * @type {string}
-     */
-    workdayEnd: string;
-
-    /**
-     * 是否忽略休息时间（暂未实现）。
-     * @type {boolean | undefined}
-     */
-    ignoreBreaks?: boolean;
-  };
-}
-
-/**
- * 惊喜提醒模块的特定配置。
- */
-export interface SurpriseModule extends ReminderModule {
-  /**
-   * 随机触发策略。
-   */
-  randomStrategy: {
-    /**
-     * 最小触发间隔（分钟）。
-     * @type {number}
-     */
-    minIntervalMinutes: number;
-
-    /**
-     * 最大触发间隔（分钟）。
-     * @type {number}
-     */
-    maxIntervalMinutes: number;
-
-    /**
-     * 在时间窗口内触发的概率 (0-1)。
-     * @type {number}
-     */
-    probability: number;
-  };
 }
 
 /**
@@ -203,12 +138,6 @@ export interface ReminderMessage {
   text: string;
 
   /**
-   * 消息被选中的权重，用于加权随机。
-   * @type {number | undefined}
-   */
-  weight?: number;
-
-  /**
    * 消息的标签，用于分类或过滤。
    * @type {string[] | undefined}
    */
@@ -250,4 +179,27 @@ export interface NotificationConfig {
    * @type {boolean | undefined}
    */
   silent?: boolean;
+}
+
+/**
+ * 日志/记忆功能的配置。
+ */
+export interface JournalConfig {
+  /**
+   * 每日推送日报的时间，格式 HH:mm。
+   * @type {string}
+   */
+  dailyReportTime: string;
+
+  /**
+   * 是否启用日报通知。
+   * @type {boolean | undefined}
+   */
+  notifyEnabled?: boolean;
+
+  /**
+   * 打开快速输入窗口的快捷键。
+   * @type {string | undefined}
+   */
+  hotkey?: string;
 }

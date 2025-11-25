@@ -21,14 +21,8 @@ const emit = defineEmits<{
 const bubbleBorderClass = computed(() => {
   const module = props.reminder.module;
   switch (module) {
-    case 'progress':
-      return 'border-emerald-500/40';
-    case 'income':
-      return 'border-blue-500/40';
-    case 'wellness':
-      return 'border-orange-500/40';
-    case 'surprise':
-      return 'border-pink-500/40';
+    case 'daily':
+      return 'border-indigo-500/40';
     default:
       return '';
   }

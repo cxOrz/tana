@@ -11,14 +11,8 @@ import { resolveAssetPath } from '../utils';
  */
 const moduleTitle = (key: ReminderModuleKey): string => {
   switch (key) {
-    case 'progress':
-      return '专注提醒';
-    case 'income':
-      return '收益提醒';
-    case 'wellness':
-      return '健康提醒';
-    case 'surprise':
-      return '小惊喜';
+    case 'daily':
+      return '日常提醒';
     default:
       return 'Tana 提醒';
   }

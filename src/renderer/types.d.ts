@@ -1,6 +1,11 @@
 declare global {
   import type { ReminderPayload } from '../shared';
-  import type { AppConfig } from '../shared';
+  import type {
+    AddJournalEntryInput,
+    JournalEntry,
+    JournalDay,
+    JournalSummary,
+  } from '../shared/journalTypes';
 
   /**
    * @file types.d.ts
@@ -16,34 +21,6 @@ declare global {
      * 这是与主进程安全通信的接口。
      */
     electronAPI: {
-      /**
-       * 执行一个在主进程中定义的命令。
-       * @param {string} command - 要执行的命令字符串。
-       * @returns {Promise<{ success: boolean; command: string; note: string }>} 命令执行的结果。
-       */
-      executeCommand: (
-        command: string
-      ) => Promise<{ success: boolean; command: string; note: string }>;
-
-      /**
-       * 从主进程加载应用配置。
-       * @returns {Promise<AppConfig>} 应用的当前配置。
-       */
-      loadAppConfig: () => Promise<AppConfig>;
-
-      /**
-       * 将应用配置保存到主进程。
-       * @param {AppConfig} config - 要保存的应用配置。
-       * @returns {Promise<AppConfig>} 保存后的配置。
-       */
-      saveAppConfig: (config: AppConfig) => Promise<AppConfig>;
-
-      /**
-       * 请求主进程打开配置窗口。
-       * @returns {Promise<void>}
-       */
-      openConfigWindow: () => Promise<void>;
-
       /**
        * 注册一个用于接收提醒事件的回调。
        * @param {(payload: ReminderPayload) => void} callback - 当收到提醒时调用的回调函数。
@@ -76,6 +53,49 @@ declare global {
        * @returns {Promise<void>}
        */
       notifySystem: (payload: ReminderPayload) => Promise<void>;
+
+      /**
+       * 写入一条日志记录。
+       * @param {AddJournalEntryInput} input - 记录内容。
+       * @returns {Promise<JournalEntry>}
+       */
+      addJournalEntry: (input: AddJournalEntryInput) => Promise<JournalEntry>;
+
+      /**
+       * 获取某天的日志数据。
+       * @param {string} [dayStamp] - 日期。
+       * @returns {Promise<JournalDay>}
+       */
+      getJournalDay: (dayStamp?: string) => Promise<JournalDay>;
+
+      /**
+       * 列出已有的日期。
+       * @param {number} [limit] - 限制数量。
+       * @returns {Promise<string[]>}
+       */
+      listJournalDays: (limit?: number) => Promise<string[]>;
+
+      /**
+       * 写入日报摘要。
+       * @param {string} dayStamp - 日期。
+       * @param {JournalSummary} summary - 摘要。
+       * @returns {Promise<JournalSummary>}
+       */
+      setJournalSummary: (dayStamp: string, summary: JournalSummary) => Promise<JournalSummary>;
+
+      /**
+       * 请求主进程打开日报窗口。
+       * @param {string} [dayStamp] - 日期。
+       * @returns {Promise<void>}
+       */
+      openJournalReport: (dayStamp?: string) => Promise<void>;
+
+      /**
+       * 监听主进程发来的“打开日报”事件。
+       * @param {(dayStamp?: string) => void} callback - 回调。
+       * @returns {() => void} 取消函数。
+       */
+      onJournalOpenReport: (callback: (dayStamp?: string) => void) => () => void;
     };
   }
 }

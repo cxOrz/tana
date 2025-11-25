@@ -1,12 +1,20 @@
-import { app, nativeImage } from 'electron';
+import { app, globalShortcut, nativeImage } from 'electron';
 import { APP_USER_MODEL_ID, IPC_CHANNELS } from '../shared/constants';
 import { loadAppConfig } from './config';
+import type { AppConfig } from './config';
 import { ReminderScheduler } from './reminderScheduler';
 import { maybeShowSystemNotification } from './services/notifications';
-import { createMainWindow, getMainWindow, updateMainWindowSize } from './windowManager';
+import {
+  createJournalInputWindow,
+  createJournalReportWindow,
+  createMainWindow,
+  getMainWindow,
+  updateMainWindowSize,
+} from './windowManager';
 import { createTray } from './trayManager';
 import { registerIpcHandlers } from './ipcHandlers';
 import { resolveAssetPath } from './utils';
+import { JournalScheduler } from './services/journalScheduler';
 
 /**
  * @file main.ts
@@ -15,6 +23,8 @@ import { resolveAssetPath } from './utils';
 
 let isQuitting = false;
 let reminderScheduler: ReminderScheduler | null = null;
+let journalScheduler: JournalScheduler | null = null;
+let currentJournalHotkey: string | null = null;
 
 if (process.platform === 'win32') {
   app.commandLine.appendSwitch('wm-window-animations-disabled');
@@ -48,14 +58,59 @@ function ensureScheduler(): ReminderScheduler {
 }
 
 /**
- * 异步初始化提醒调度器。
+ * 获取或创建日志调度器。
+ * @returns {JournalScheduler}
  */
-async function initializeReminderScheduler(): Promise<void> {
-  try {
-    const config = await loadAppConfig();
-    ensureScheduler().start(config);
-  } catch (error) {
-    console.error('[main] 初始化提醒调度器失败', error);
+function ensureJournalScheduler(): JournalScheduler {
+  if (!journalScheduler) {
+    journalScheduler = new JournalScheduler(() => openJournalReport());
+  }
+  return journalScheduler;
+}
+
+/**
+ * 打开日报窗口。
+ * @param {string} [dayStamp] - 指定日期，默认当天。
+ */
+function openJournalReport(dayStamp?: string): void {
+  const win = createJournalReportWindow();
+  if (win && !win.isDestroyed()) {
+    const sendDay = () => win.webContents.send(IPC_CHANNELS.JOURNAL_OPEN_REPORT, dayStamp);
+    if (win.webContents.isLoading()) {
+      win.webContents.once('did-finish-load', sendDay);
+    } else {
+      sendDay();
+    }
+    win.show();
+    win.focus();
+  }
+}
+
+/**
+ * 刷新日志快捷键注册。
+ * @param {AppConfig} config - 应用配置。
+ */
+function refreshJournalHotkey(config: AppConfig): void {
+  const hotkey = config.journal?.hotkey;
+  if (currentJournalHotkey) {
+    try {
+      globalShortcut.unregister(currentJournalHotkey);
+    } catch {}
+  }
+  if (hotkey) {
+    const ok = globalShortcut.register(hotkey, () => {
+      const win = createJournalInputWindow();
+      if (win && !win.isDestroyed()) {
+        win.show();
+        win.focus();
+      }
+    });
+    if (ok) {
+      currentJournalHotkey = hotkey;
+    } else {
+      console.warn('[journal] 注册快捷键失败', hotkey);
+      currentJournalHotkey = null;
+    }
   }
 }
 
@@ -66,6 +121,10 @@ async function initializeReminderScheduler(): Promise<void> {
 app.on('before-quit', () => {
   isQuitting = true;
   reminderScheduler?.stop();
+  journalScheduler?.stop();
+  try {
+    globalShortcut.unregisterAll();
+  } catch {}
 });
 
 app.on('window-all-closed', () => {
@@ -75,17 +134,6 @@ app.on('window-all-closed', () => {
 });
 
 app.whenReady().then(async () => {
-  // Restore window size from config
-  try {
-    const cfg = await loadAppConfig();
-    if (cfg.petWindow?.scale && typeof cfg.petWindow.scale === 'number') {
-      const scale = Math.max(0.5, Math.min(3, cfg.petWindow.scale));
-      updateMainWindowSize(scale);
-    }
-  } catch (err) {
-    console.warn('[main] Failed to load window size from config, using defaults.', err);
-  }
-
   // Platform-specific setup
   if (process.platform === 'darwin' && app.dock) {
     const dockIcon = nativeImage.createFromPath(resolveAssetPath('icons', 'logo.png'));
@@ -96,11 +144,33 @@ app.whenReady().then(async () => {
     app.setAppUserModelId(APP_USER_MODEL_ID);
   }
 
+  let loadedConfig: AppConfig | null = null;
+  try {
+    loadedConfig = await loadAppConfig();
+    if (loadedConfig.petWindow?.scale && typeof loadedConfig.petWindow.scale === 'number') {
+      const scale = Math.max(0.5, Math.min(3, loadedConfig.petWindow.scale));
+      updateMainWindowSize(scale);
+    }
+  } catch (error) {
+    console.error('[main] 加载配置失败，使用默认窗口尺寸', error);
+  }
+
+  const scheduler = ensureScheduler();
+  const journal = ensureJournalScheduler();
+  if (loadedConfig) {
+    try {
+      scheduler.start(loadedConfig);
+      journal.start(loadedConfig);
+      refreshJournalHotkey(loadedConfig);
+    } catch (error) {
+      console.warn('[main] 启动调度器失败', error);
+    }
+  }
+
   // Initialize app components
   createTray(() => isQuitting);
   createMainWindow(() => isQuitting);
-  initializeReminderScheduler();
-  registerIpcHandlers(ensureScheduler());
+  registerIpcHandlers();
 
   app.on('activate', () => {
     const window = getMainWindow() ?? createMainWindow(() => isQuitting);

@@ -1,6 +1,6 @@
 import { app, Menu, Tray, nativeImage, ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../shared/constants';
-import { createMainWindow, getMainWindow, createConfigWindow } from './windowManager';
+import { createMainWindow, getMainWindow } from './windowManager';
 import { resolveAssetPath } from './utils';
 
 /**
@@ -66,16 +66,6 @@ export function createTray(isQuitting: () => boolean): void {
     {
       label: '显示/隐藏窗口',
       click: toggleWindow,
-    },
-    {
-      label: '打开配置窗口',
-      click: () => {
-        const configWin = createConfigWindow();
-        if (!configWin.isDestroyed() && !configWin.isVisible()) {
-          configWin.show();
-        }
-        configWin.focus();
-      },
     },
     { type: 'separator' },
     {

@@ -1,59 +1,17 @@
 import type { ReminderModuleKey, ReminderPayload } from '../shared';
-import {
-  AppConfig,
-  IncomeReminderModule,
-  ReminderMessage,
-  ReminderModule,
-  SurpriseModule,
-} from './config';
+import { AppConfig, ReminderMessage, ReminderModule } from './config';
 
 /**
  * 基础提醒模块的状态。
- * @interface BaseModuleState
+ * @interface ModuleState
  * @property {number} elapsedMinutes - 自上次触发以来经过的分钟数。
  * @property {number} [lastTriggerAt] - 上次触发的时间戳。
  * @property {number} [nextAvailableAt] - 下次可触发的最早时间戳 (用于冷却)。
  */
-interface BaseModuleState {
+interface ModuleState {
   elapsedMinutes: number;
   lastTriggerAt?: number;
   nextAvailableAt?: number;
-}
-
-/**
- * 收入提醒模块的特定状态。
- * @interface IncomeModuleState
- * @extends {BaseModuleState}
- * @property {number} workedMinutesToday - 今天已工作的分钟数。
- * @property {number} incomeToday - 今天预估的收入。
- */
-interface IncomeModuleState extends BaseModuleState {
-  workedMinutesToday: number;
-  incomeToday: number;
-}
-
-/**
- * 惊喜提醒模块的特定状态。
- * @interface SurpriseModuleState
- * @extends {BaseModuleState}
- * @property {{ earliest: number; latest: number }} [randomWindow] - 随机触发的时间窗口。
- */
-interface SurpriseModuleState extends BaseModuleState {
-  randomWindow?: {
-    earliest: number;
-    latest: number;
-  };
-}
-
-type ModuleState = BaseModuleState | IncomeModuleState | SurpriseModuleState;
-
-/**
- * 提醒调度器的运行时上下文。
- * @interface ReminderRuntimeContext
- * @property {Record<string, boolean>} [customFlags] - 用于 `custom` 类型触发器的自定义标志。
- */
-export interface ReminderRuntimeContext {
-  customFlags?: Record<string, boolean>;
 }
 
 type SendReminderFn = (payload: ReminderPayload) => void;
@@ -68,7 +26,6 @@ export class ReminderScheduler {
   private moduleStates: Partial<Record<ReminderModuleKey, ModuleState>> = {};
   private lastTickAt = Date.now();
   private currentDayStamp = getDayStamp(new Date());
-  private runtimeContext: ReminderRuntimeContext = {};
 
   /**
    * 创建一个 ReminderScheduler 实例。
@@ -105,17 +62,6 @@ export class ReminderScheduler {
   }
 
   /**
-   * 更新调度器的运行时上下文。
-   * @param {Partial<ReminderRuntimeContext>} context - 要更新的部分上下文。
-   */
-  updateRuntimeContext(context: Partial<ReminderRuntimeContext>): void {
-    this.runtimeContext = {
-      ...this.runtimeContext,
-      ...context,
-    };
-  }
-
-  /**
    * 执行一次调度循环 (tick)。
    * @private
    */
@@ -141,21 +87,17 @@ export class ReminderScheduler {
       }
 
       if (!this.moduleStates[key]) {
-        this.moduleStates[key] = this.createInitialStateForModule(key);
+        this.moduleStates[key] = this.createInitialStateForModule();
       }
 
       const state = this.moduleStates[key]!;
       state.elapsedMinutes += deltaMinutes;
 
-      if (key === 'income' && isIncomeModule(moduleConfig) && isIncomeState(state)) {
-        this.applyIncomeProgress(moduleConfig, state, now, deltaMinutes);
-      }
-
       if (state.nextAvailableAt && now < state.nextAvailableAt) {
         continue;
       }
 
-      const shouldFire = this.shouldTriggerModule(key, moduleConfig, state, now);
+      const shouldFire = this.shouldTriggerModule(moduleConfig, state);
       if (!shouldFire) {
         continue;
       }
@@ -165,7 +107,7 @@ export class ReminderScheduler {
         continue;
       }
 
-      const context = this.buildContextForModule(key, moduleConfig, state, deltaMinutes, now);
+      const context = this.buildContextForModule(moduleConfig, state, deltaMinutes, now);
       const renderedText = interpolate(message.text, context);
 
       this.sendReminder({
@@ -181,27 +123,17 @@ export class ReminderScheduler {
       state.nextAvailableAt = now + cooldownMinutes * 60 * 1000;
       state.elapsedMinutes = 0;
 
-      if (isSurpriseModule(moduleConfig) && isSurpriseState(state)) {
-        state.randomWindow = createRandomWindow(now, moduleConfig.randomStrategy);
-      }
     }
   }
 
   /**
    * 判断一个模块是否应该被触发。
    * @private
-   * @param {ReminderModuleKey} key - 模块的键。
-   * @param {ReminderModule | IncomeReminderModule | SurpriseModule} moduleConfig - 模块的配置。
+   * @param {ReminderModule} moduleConfig - 模块的配置。
    * @param {ModuleState} state - 模块的当前状态。
-   * @param {number} now - 当前的时间戳。
    * @returns {boolean} 如果模块应该被触发，则返回 true。
    */
-  private shouldTriggerModule(
-    key: ReminderModuleKey,
-    moduleConfig: ReminderModule | IncomeReminderModule | SurpriseModule,
-    state: ModuleState,
-    now: number
-  ): boolean {
+  private shouldTriggerModule(moduleConfig: ReminderModule, state: ModuleState): boolean {
     const triggers = moduleConfig.triggers ?? [];
     let triggered = triggers.length === 0;
 
@@ -216,15 +148,6 @@ export class ReminderScheduler {
           }
           break;
         }
-        case 'idle': {
-          break;
-        }
-        case 'custom': {
-          if (trigger.id && this.runtimeContext.customFlags?.[trigger.id]) {
-            triggered = true;
-          }
-          break;
-        }
         default:
           break;
       }
@@ -232,26 +155,6 @@ export class ReminderScheduler {
       if (triggered) {
         break;
       }
-    }
-
-    if (isSurpriseModule(moduleConfig) && isSurpriseState(state)) {
-      if (!triggered) {
-        return false;
-      }
-
-      const window = state.randomWindow ?? createRandomWindow(now, moduleConfig.randomStrategy);
-      state.randomWindow = window;
-
-      if (now < window.earliest) {
-        return false;
-      }
-
-      if (now >= window.latest) {
-        return true;
-      }
-
-      const roll = Math.random();
-      return roll <= moduleConfig.randomStrategy.probability;
     }
 
     return triggered;
@@ -262,9 +165,8 @@ export class ReminderScheduler {
    * @private
    */
   private buildContextForModule(
-    key: ReminderModuleKey,
-    _moduleConfig: ReminderModule | IncomeReminderModule | SurpriseModule,
-    state: ModuleState,
+    _moduleConfig: ReminderModule,
+    _state: ModuleState,
     deltaMinutes: number,
     now: number
   ): Record<string, unknown> {
@@ -273,71 +175,14 @@ export class ReminderScheduler {
       timestamp: now,
     };
 
-    if (key === 'income' && isIncomeState(state)) {
-      const workedMinutes = state.workedMinutesToday;
-      const incomeValue = state.incomeToday;
-      context['income'] = incomeValue.toFixed(2);
-      context['workedMinutes'] = workedMinutes;
-    }
-
     return context;
-  }
-
-  /**
-   * 更新收入模块的工作进度和收入。
-   * @private
-   */
-  private applyIncomeProgress(
-    moduleConfig: IncomeReminderModule,
-    state: IncomeModuleState,
-    now: number,
-    deltaMinutes: number
-  ): void {
-    const activeMinutes = this.isWithinWorkWindow(now, moduleConfig) ? deltaMinutes : 0;
-    state.workedMinutesToday += activeMinutes;
-    const hourlyRate = moduleConfig.incomeConfig.hourlyRate || 0;
-    state.incomeToday = (state.workedMinutesToday / 60) * hourlyRate;
-  }
-
-  /**
-   * 检查当前时间是否在工作窗口内。
-   * @private
-   */
-  private isWithinWorkWindow(timestamp: number, moduleConfig: IncomeReminderModule): boolean {
-    const { workdayStart, workdayEnd } = moduleConfig.incomeConfig;
-    const startMinutes = parseTimeToMinutes(workdayStart);
-    const endMinutes = parseTimeToMinutes(workdayEnd);
-    const currentDate = new Date(timestamp);
-    const minutes = currentDate.getHours() * 60 + currentDate.getMinutes();
-    if (startMinutes === undefined || endMinutes === undefined) {
-      return true;
-    }
-    if (endMinutes >= startMinutes) {
-      return minutes >= startMinutes && minutes < endMinutes;
-    }
-    return minutes >= startMinutes || minutes < endMinutes;
   }
 
   /**
    * 为指定模块创建初始状态。
    * @private
    */
-  private createInitialStateForModule(key: ReminderModuleKey): ModuleState {
-    if (key === 'income') {
-      return {
-        elapsedMinutes: 0,
-        workedMinutesToday: 0,
-        incomeToday: 0,
-      } as IncomeModuleState;
-    }
-
-    if (key === 'surprise') {
-      return {
-        elapsedMinutes: 0,
-        randomWindow: undefined,
-      } as SurpriseModuleState;
-    }
-
+  private createInitialStateForModule(): ModuleState {
     return {
       elapsedMinutes: 0,
     };
@@ -348,22 +193,10 @@ export class ReminderScheduler {
    * @private
    */
   private resetDailyStates(): void {
-    for (const [key, state] of Object.entries(this.moduleStates) as [
-      ReminderModuleKey,
-      ModuleState,
-    ][]) {
+    for (const state of Object.values(this.moduleStates) as ModuleState[]) {
       state.elapsedMinutes = 0;
       state.lastTriggerAt = undefined;
       state.nextAvailableAt = undefined;
-
-      if (key === 'income' && isIncomeState(state)) {
-        state.workedMinutesToday = 0;
-        state.incomeToday = 0;
-      }
-
-      if (key === 'surprise' && isSurpriseState(state)) {
-        state.randomWindow = undefined;
-      }
     }
   }
 }
@@ -387,56 +220,9 @@ function interpolate(template: string, context: Record<string, unknown>): string
  * @returns {ReminderMessage | undefined} 选中的消息或 undefined。
  */
 function pickMessage(messages: ReminderMessage[]): ReminderMessage | undefined {
-  if (!messages || messages.length === 0) {
-    return undefined;
-  }
-
-  const totalWeight = messages.reduce((sum, msg) => sum + (msg.weight ?? 1), 0);
-  const threshold = Math.random() * totalWeight;
-
-  let cumulative = 0;
-  for (const message of messages) {
-    cumulative += message.weight ?? 1;
-    if (threshold <= cumulative) {
-      return message;
-    }
-  }
-
-  return messages[0];
-}
-
-/**
- * 为惊喜模块创建一个随机的时间窗口。
- * @param {number} now - 当前的时间戳。
- * @param {SurpriseModule['randomStrategy']} strategy - 随机策略配置。
- * @returns {{ earliest: number; latest: number }} 触发时间窗口。
- */
-function createRandomWindow(
-  now: number,
-  strategy: SurpriseModule['randomStrategy']
-): { earliest: number; latest: number } {
-  const { minIntervalMinutes, maxIntervalMinutes } = strategy;
-  const minMs = Math.max(minIntervalMinutes, 1) * 60 * 1000;
-  const maxMs = Math.max(maxIntervalMinutes, minIntervalMinutes) * 60 * 1000;
-  const earliest = now + minMs;
-  const latest = now + maxMs;
-  return { earliest, latest };
-}
-
-/**
- * 将 "HH:mm" 格式的时间字符串解析为从午夜开始的分钟数。
- * @param {string | undefined} value - 时间字符串。
- * @returns {number | undefined} 分钟数或 undefined。
- */
-function parseTimeToMinutes(value: string | undefined): number | undefined {
-  if (!value) {
-    return undefined;
-  }
-  const [hours, minutes] = value.split(':').map((n) => Number.parseInt(n, 10));
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-    return undefined;
-  }
-  return hours * 60 + minutes;
+  if (!messages || messages.length === 0) return undefined;
+  const index = Math.floor(Math.random() * messages.length);
+  return messages[index];
 }
 
 /**
@@ -446,25 +232,4 @@ function parseTimeToMinutes(value: string | undefined): number | undefined {
  */
 function getDayStamp(date: Date): string {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-}
-
-// Type guards to narrow down module and state types
-function isIncomeModule(
-  module: ReminderModule | IncomeReminderModule | SurpriseModule
-): module is IncomeReminderModule {
-  return (module as IncomeReminderModule).incomeConfig !== undefined;
-}
-
-function isSurpriseModule(
-  module: ReminderModule | IncomeReminderModule | SurpriseModule
-): module is SurpriseModule {
-  return (module as SurpriseModule).randomStrategy !== undefined;
-}
-
-function isIncomeState(state: ModuleState): state is IncomeModuleState {
-  return (state as IncomeModuleState).workedMinutesToday !== undefined;
-}
-
-function isSurpriseState(state: ModuleState): state is SurpriseModuleState {
-  return Object.hasOwn(state, 'randomWindow');
 }

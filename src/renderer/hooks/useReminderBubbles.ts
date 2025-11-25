@@ -20,10 +20,7 @@ import type { ReminderModuleKey, ReminderPayload } from '../../shared';
  * 模块键到中文标签的映射。
  */
 const moduleLabelMap: Record<ReminderModuleKey, string> = {
-  progress: '专注提醒',
-  income: '收益提示',
-  wellness: '状态提醒',
-  surprise: '小惊喜',
+  daily: '日常提醒',
 };
 
 const isDev = import.meta.env.DEV;
@@ -72,7 +69,7 @@ export function useReminderBubbles(): UseReminderBubblesResult {
       : date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
   });
 
-  const mockModules: ReminderModuleKey[] = ['progress', 'income', 'wellness', 'surprise'];
+  const mockModules: ReminderModuleKey[] = ['daily'];
   let mockIndex = 0;
   let reminderTimer: number | null = null;
   let unsubscribeReminder: (() => void) | null = null;
@@ -125,7 +122,7 @@ export function useReminderBubbles(): UseReminderBubblesResult {
   const takeMockModule = (): ReminderModuleKey => {
     const index = mockIndex % mockModules.length;
     mockIndex += 1;
-    return mockModules[index] ?? 'progress';
+    return mockModules[index] ?? 'daily';
   };
 
   /**
