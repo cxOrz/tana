@@ -1,24 +1,9 @@
-/**
- * @file constants.ts
- * @description
- * 项目中共享的常量。
- * 将这些值集中管理可以提高代码的可维护性和一致性。
- */
-
-/**
- * 宠物窗口的基础尺寸。
- * @property {number} WIDTH - 基础宽度。
- * @property {number} HEIGHT - 基础高度。
- */
+// 项目中的共享常量，集中管理可以减少魔法字符串与重复定义。
 export const PET_WINDOW_BASE_SIZE = {
   WIDTH: 450,
   HEIGHT: 360,
 };
 
-/**
- * Electron IPC 通道的名称。
- * 使用枚举或对象可以避免在代码中使用裸字符串，从而减少拼写错误。
- */
 export const IPC_CHANNELS = {
   // App lifecycle
   WILL_SHOW: 'app:will-show',
@@ -39,7 +24,4 @@ export const IPC_CHANNELS = {
   JOURNAL_OPEN_REPORT: 'journal:open-report',
 };
 
-/**
- * 应用程序的用户模型 ID (主要用于 Windows)。
- */
-export const APP_USER_MODEL_ID = 'com.cxorz.tana';
+export const APP_USER_MODEL_ID = 'com.cxorz.tana'; // Windows 使用的用户模型 ID。
