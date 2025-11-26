@@ -1,113 +1,33 @@
-/**
- * @file journalTypes.d.ts
- * @description
- * 定义日志/记忆功能的共享类型，便于主进程与渲染进程复用。
- */
-
-/**
- * 单条日志记录。
- */
+// 日志/记忆功能的共享类型，主进程与渲染进程都会引用。
 export interface JournalEntry {
-  /**
-   * 记录的唯一 ID。
-   */
-  id: string;
-  /**
-   * 记录创建时间的时间戳 (ms)。
-   */
-  ts: number;
-  /**
-   * 记录类型，预留扩展。
-   */
-  type: 'note' | string;
-  /**
-   * 记录的标题，可为空。
-   */
-  title?: string;
-  /**
-   * 记录正文，支持 Markdown。
-   */
-  body: string;
-  /**
-   * 标签列表。
-   */
-  tags?: string[];
-  /**
-   * 记录来源，例如 quick-input/clipboard 等。
-   */
-  source?: string;
-  /**
- * 结构化元数据，便于后续扩展。
- */
-  meta?: Record<string, unknown>;
+  id: string; // 记录的唯一 ID。
+  ts: number; // 记录创建时间的时间戳 (ms)。
+  type: 'note' | string; // 记录类型，预留扩展。
+  title?: string; // 记录的标题，可为空。
+  body: string; // 记录正文，支持 Markdown。
+  tags?: string[]; // 标签列表。
+  source?: string; // 记录来源，例如 quick-input/clipboard 等。
+  meta?: Record<string, unknown>; // 结构化元数据，便于后续扩展。
 }
 
-/**
- * 新增日志记录时的输入载荷。
- */
 export interface AddJournalEntryInput {
-  /**
-   * 记录正文。
-   */
-  body: string;
-  /**
-   * 可选标题。
-   */
-  title?: string;
-  /**
-   * 可选标签列表。
-   */
-  tags?: string[];
-  /**
-   * 可选自定义类型。
-   */
-  type?: string;
-  /**
-   * 记录来源描述。
-   */
-  source?: string;
-  /**
-   * 自定义时间戳，默认使用当前时间。
-   */
-  ts?: number;
-  /**
-   * 元数据。
-   */
-  meta?: Record<string, unknown>;
+  body: string; // 记录正文。
+  title?: string; // 可选标题。
+  tags?: string[]; // 可选标签列表。
+  type?: string; // 可选自定义类型。
+  source?: string; // 记录来源描述。
+  ts?: number; // 自定义时间戳，默认使用当前时间。
+  meta?: Record<string, unknown>; // 元数据。
 }
 
-/**
- * 当日摘要信息，供 AI 或人工生成日报使用。
- */
 export interface JournalSummary {
-  /**
-   * 最近一次生成的 Markdown 摘要。
-   */
-  draft: string;
-  /**
-   * 由模型生成的摘要，可区分人工/模型。
-   */
-  model?: string;
-  /**
-   * 摘要生成时间戳 (ms)。
-   */
-  generatedAt?: number;
+  draft: string; // 最近一次生成的 Markdown 摘要。
+  model?: string; // 由模型生成的摘要，可区分人工/模型。
+  generatedAt?: number; // 摘要生成时间戳 (ms)。
 }
 
-/**
- * 某一天的日志集合。
- */
 export interface JournalDay {
-  /**
-   * 日期字符串，格式 YYYY-MM-DD。
-   */
-  date: string;
-  /**
-   * 该日所有记录。
-   */
-  entries: JournalEntry[];
-  /**
-   * 日报摘要。
-   */
-  summary?: JournalSummary;
+  date: string; // 日期字符串，格式 YYYY-MM-DD。
+  entries: JournalEntry[]; // 该日所有记录。
+  summary?: JournalSummary; // 日报摘要。
 }
