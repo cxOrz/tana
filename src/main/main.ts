@@ -26,6 +26,34 @@ let reminderScheduler: ReminderScheduler | null = null;
 let journalScheduler: JournalScheduler | null = null;
 let currentJournalHotkey: string | null = null;
 
+// Handle the --open-journal flag
+const openJournalOnStart = process.argv.includes('--open-journal');
+
+// Single instance lock
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (_event, commandLine) => {
+    // Someone tried to run a second instance, we should focus our window.
+    const mainWindow = getMainWindow();
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+
+    // Handle --open-journal flag for second instance
+    if (commandLine.includes('--open-journal')) {
+      const win = createJournalInputWindow();
+      if (win && !win.isDestroyed()) {
+        win.show();
+        win.focus();
+      }
+    }
+  });
+}
+
 if (process.platform === 'win32') {
   app.commandLine.appendSwitch('wm-window-animations-disabled');
 }
@@ -171,6 +199,15 @@ app.whenReady().then(async () => {
   createTray(() => isQuitting);
   createMainWindow(() => isQuitting);
   registerIpcHandlers();
+
+  // Handle --open-journal flag on first launch
+  if (openJournalOnStart) {
+    const win = createJournalInputWindow();
+    if (win && !win.isDestroyed()) {
+      win.show();
+      win.focus();
+    }
+  }
 
   app.on('activate', () => {
     const window = getMainWindow() ?? createMainWindow(() => isQuitting);

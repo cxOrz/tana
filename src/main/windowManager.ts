@@ -141,7 +141,7 @@ export function createJournalInputWindow(): BrowserWindow {
 
   journalInputWindow = new BrowserWindow({
     width: 420,
-    height: 260,
+    height: 220,
     resizable: false,
     autoHideMenuBar: true,
     frame: false,
