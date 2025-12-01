@@ -9,6 +9,10 @@ export interface AppConfig {
   petWindow?: PetWindowConfig; // 宠物窗口的配置。
   notifications?: NotificationConfig; // 系统通知的配置。
   journal?: JournalConfig; // 日志/记忆功能的配置。
+  workDay?: {
+    startTime: string;
+    endTime: string;
+  };
 }
 
 // 提醒模块配置的映射表，键为模块的唯一标识符。
@@ -31,6 +35,8 @@ export interface TriggerConfig {
 export interface ReminderMessage {
   id: string; // 消息的唯一标识符。
   text: string; // 支持 `{key}` 格式的模板变量。
+  type?: string; // 消息类型，用于特定逻辑处理，如 'salary'。
+  targetEarnSalary?: number; // 配合特定类型（如 'salary'）使用的目标值。
   tags?: string[]; // 消息标签，用于分类或过滤。
   media?: {
     animationId?: string;
