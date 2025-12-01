@@ -50,9 +50,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="h-screen overflow-hidden bg-gradient-to-b from-slate-900/90 via-slate-900 to-slate-950 text-slate-50">
+  <div class="h-screen overflow-hidden rounded-[10px] bg-linear-to-b from-slate-900/90 via-slate-900 to-slate-950 text-slate-50">
     <div class="mx-auto flex h-full max-w-xl flex-col gap-4 px-6 py-6">
-      <div class="flex flex-shrink-0 items-center justify-between">
+      <div class="flex shrink-0 items-center justify-between">
         <div>
           <p class="text-xs uppercase tracking-[0.2em] text-slate-400">快速记录</p>
           <p class="text-lg font-semibold text-white">写下此刻的想法</p>

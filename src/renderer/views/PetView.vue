@@ -109,6 +109,7 @@ body {
   opacity: 1;
   transition: opacity 220ms ease;
   -webkit-app-region: drag; /* 允许拖动窗口 */
+  border-radius: 10px;
 }
 .app-enter {
   opacity: 0;
