@@ -3,17 +3,10 @@ import { IPC_CHANNELS } from '../shared/constants';
 import { createMainWindow, getMainWindow } from './windowManager';
 import { resolveAssetPath } from './utils';
 
-/**
- * @file trayManager.ts
- * @description
- * 负责创建和管理系统托盘图标及其上下文菜单。
- */
-
 let tray: Tray | null = null;
 
 /**
  * 向渲染进程发送一个隐藏请求，并在收到确认后执行回调。
- * @param {() => void} action - 在收到确认后执行的回调。
  */
 function requestRendererExitThen(action: () => void) {
   const win = getMainWindow();
@@ -36,7 +29,6 @@ function requestRendererExitThen(action: () => void) {
 
 /**
  * 创建系统托盘图标。
- * @param {() => boolean} isQuitting - 一个闭包，用于判断应用是否正在退出。
  */
 export function createTray(isQuitting: () => boolean): void {
   if (tray) {

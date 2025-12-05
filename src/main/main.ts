@@ -176,7 +176,7 @@ app.whenReady().then(async () => {
   try {
     loadedConfig = await loadAppConfig();
     if (loadedConfig.petWindow?.scale && typeof loadedConfig.petWindow.scale === 'number') {
-      const scale = Math.max(0.5, Math.min(3, loadedConfig.petWindow.scale));
+      const scale = Math.max(0.5, Math.min(2, loadedConfig.petWindow.scale)); // 缩放限制在 0.5 - 2 之间
       updateMainWindowSize(scale);
     }
   } catch (error) {

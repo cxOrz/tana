@@ -1,3 +1,4 @@
+// 渲染层 tsconfig
 {
   "extends": ["../../tsconfig.base.json", "@vue/tsconfig/tsconfig.dom.json"],
   "compilerOptions": {

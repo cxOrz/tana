@@ -1,12 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 
-/**
- * @file JournalQuickInputView.vue
- * @description
- * 快速输入窗口，支持快捷键唤起后输入一段文本，回车提交并关闭。
- */
-
 const content = ref('');
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 

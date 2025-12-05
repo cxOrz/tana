@@ -1,3 +1,4 @@
+// 直接继承 renderer 层的 tsconfig；放在根目录方便 IDE 识别项目、代码提示
 {
   "extends": "./src/renderer/tsconfig.json"
 }

@@ -12,12 +12,6 @@ import {
 import { createJournalReportWindow } from './windowManager';
 
 /**
- * @file ipcHandlers.ts
- * @description
- * 注册和管理所有主进程的 IPC 事件监听器。
- */
-
-/**
  * 注册所有的 IPC 事件处理程序。
  */
 export function registerIpcHandlers(): void {

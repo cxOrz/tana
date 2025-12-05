@@ -1,7 +1,20 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { ReminderPayload } from '../shared';
 import type { AddJournalEntryInput, JournalDay, JournalSummary } from '../shared/journalTypes';
-import { IPC_CHANNELS } from '../shared/constants';
+
+// 由于开启 sandbox 后 preload 无法访问相对模块，这里内联 IPC 渠道常量。
+const IPC_CHANNELS = {
+  WILL_SHOW: 'app:will-show',
+  WILL_HIDE: 'app:will-hide',
+  HIDE_ACK: 'app:hide-ack',
+  PUSH_REMINDER: 'reminder:push',
+  SHOW_SYSTEM_NOTIFICATION: 'notify:system',
+  JOURNAL_ADD_ENTRY: 'journal:add-entry',
+  JOURNAL_GET_DAY: 'journal:get-day',
+  JOURNAL_LIST_DAYS: 'journal:list-days',
+  JOURNAL_SET_SUMMARY: 'journal:set-summary',
+  JOURNAL_OPEN_REPORT: 'journal:open-report',
+} as const;
 
 /**
  * 定义并暴露给渲染进程的API。
