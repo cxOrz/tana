@@ -57,4 +57,11 @@ export interface JournalConfig {
   dailyReportTime: string; // 每日推送日报的时间，格式 HH:mm。
   notifyEnabled?: boolean; // 是否启用日报通知。
   hotkey?: string; // 打开快速输入窗口的快捷键。
+  ai?: JournalAiConfig; // 日志摘要生成的 AI 配置。
+}
+
+export interface JournalAiConfig {
+  model: string; // 使用的模型 ID。
+  apiKey: string; // 模型服务的访问密钥。
+  baseURL?: string; // 可选的自定义服务地址。
 }

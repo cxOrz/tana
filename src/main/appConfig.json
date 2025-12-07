@@ -16,7 +16,12 @@
   "journal": {
     "dailyReportTime": "18:00",
     "notifyEnabled": true,
-    "hotkey": "Alt+J"
+    "hotkey": "Alt+J",
+    "ai": {
+      "model": "google/gemini-3-pro-preview",
+      "apiKey": "YOUR_OPENROUTER_API_KEY",
+      "baseURL": "https://openrouter.ai/api/v1"
+    }
   },
   "reminders": {
     "daily": {

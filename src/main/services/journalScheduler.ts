@@ -1,8 +1,10 @@
 import { Notification } from 'electron';
+import type { JournalDay } from '../../shared';
 import type { AppConfig } from '../config';
-import { loadJournalDay } from './journalStore';
+import { loadJournalDay, setJournalSummary } from './journalStore';
 import { resolveAssetPath } from '../utils';
 import { getDayStamp } from './journalStore';
+import { generateJournalSummary } from './journalSummary';
 
 /**
  * @file journalScheduler.ts
@@ -63,6 +65,7 @@ export class JournalScheduler {
 
     this.lastNotifiedDay = dayStamp;
     const day = await loadJournalDay(dayStamp);
+    await this.maybeGenerateSummary(day, dayStamp);
     const count = day.entries.length;
     this.showNotification(count);
   }
@@ -92,6 +95,21 @@ export class JournalScheduler {
       notif.show();
     } catch (error) {
       console.warn('[journal] 显示日报通知失败', error);
+    }
+  }
+
+  /**
+   * 尝试生成并保存当日的 AI 日报摘要。
+   */
+  private async maybeGenerateSummary(day: JournalDay, dayStamp: string): Promise<void> {
+    if (!this.config?.journal?.ai) return;
+    try {
+      const summary = await generateJournalSummary(day, this.config);
+      if (summary) {
+        await setJournalSummary(dayStamp, summary);
+      }
+    } catch (error) {
+      console.warn('[journal] 生成日报摘要失败', error);
     }
   }
 }

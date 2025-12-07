@@ -9,12 +9,6 @@ const FILE_PREFIX = 'journal-';
 const FILE_EXT = '.json';
 
 /**
- * @file journalStore.ts
- * @description
- * 负责日志/记忆数据的持久化存储。以“按天一个 JSON 文件”的方式写入用户数据目录。
- */
-
-/**
  * 解析日期戳的文件路径。
  * @param {string} dayStamp - 格式为 YYYY-MM-DD 的日期。
  * @returns {string} 文件绝对路径。

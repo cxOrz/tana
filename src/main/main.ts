@@ -26,8 +26,10 @@ let reminderScheduler: ReminderScheduler | null = null;
 let journalScheduler: JournalScheduler | null = null;
 let currentJournalHotkey: string | null = null;
 
-// Handle the --open-journal flag
-const openJournalOnStart = process.argv.includes('--open-journal');
+// Handle the --open-journal-input flag
+const openJournalInputOnStart = process.argv.includes('--open-journal-input');
+// Handle the --open-journal-report flag
+const openJournalReportOnStart = process.argv.includes('--open-journal-report');
 
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock();
@@ -43,13 +45,14 @@ if (!gotTheLock) {
       mainWindow.focus();
     }
 
-    // Handle --open-journal flag for second instance
-    if (commandLine.includes('--open-journal')) {
-      const win = createJournalInputWindow();
-      if (win && !win.isDestroyed()) {
-        win.show();
-        win.focus();
-      }
+    // Handle --open-journal-input flag for second instance
+    if (commandLine.includes('--open-journal-input')) {
+      openJournalInput();
+    }
+
+    // Handle --open-journal-report flag for second instance
+    if (commandLine.includes('--open-journal-report')) {
+      openJournalReport();
     }
   });
 }
@@ -97,21 +100,29 @@ function ensureJournalScheduler(): JournalScheduler {
 }
 
 /**
+ * 打开日志输入窗口。
+ */
+function openJournalInput(): void {
+  const win = createJournalInputWindow();
+  win.show();
+  win.focus();
+}
+
+/**
  * 打开日报窗口。
  * @param {string} [dayStamp] - 指定日期，默认当天。
  */
 function openJournalReport(dayStamp?: string): void {
   const win = createJournalReportWindow();
-  if (win && !win.isDestroyed()) {
-    const sendDay = () => win.webContents.send(IPC_CHANNELS.JOURNAL_OPEN_REPORT, dayStamp);
-    if (win.webContents.isLoading()) {
-      win.webContents.once('did-finish-load', sendDay);
-    } else {
-      sendDay();
-    }
-    win.show();
-    win.focus();
+
+  const sendDay = () => win.webContents.send(IPC_CHANNELS.JOURNAL_OPEN_REPORT, dayStamp);
+  if (win.webContents.isLoading()) {
+    win.webContents.once('did-finish-load', sendDay);
+  } else {
+    sendDay();
   }
+  win.show();
+  win.focus();
 }
 
 /**
@@ -127,11 +138,7 @@ function refreshJournalHotkey(config: AppConfig): void {
   }
   if (hotkey) {
     const ok = globalShortcut.register(hotkey, () => {
-      const win = createJournalInputWindow();
-      if (win && !win.isDestroyed()) {
-        win.show();
-        win.focus();
-      }
+      openJournalInput();
     });
     if (ok) {
       currentJournalHotkey = hotkey;
@@ -200,13 +207,14 @@ app.whenReady().then(async () => {
   createMainWindow(() => isQuitting);
   registerIpcHandlers();
 
-  // Handle --open-journal flag on first launch
-  if (openJournalOnStart) {
-    const win = createJournalInputWindow();
-    if (win && !win.isDestroyed()) {
-      win.show();
-      win.focus();
-    }
+  // Handle --open-journal-input flag on first launch
+  if (openJournalInputOnStart) {
+    openJournalInput();
+  }
+
+  // Handle --open-journal-report flag on first launch
+  if (openJournalReportOnStart) {
+    openJournalReport();
   }
 
   app.on('activate', () => {
