@@ -1,34 +1,36 @@
-# Tana 桌面宠物
+# Tana — 您的桌面贴心伴侣
 
-Tana 是一款常驻桌面的可爱史莱姆宠物，它能按节奏推送日常提醒，并提供轻量的日报。项目基于 Electron + Vue 3 + Pixi.js 构建，可一键打包成跨平台桌面应用。
+Tana 是一款开源的桌面宠物应用，它将一只可爱的史莱姆带到您的桌面上，旨在通过轻量、无干扰的方式为您提供贴心提醒和便捷的日志记录功能。
+
+项目基于 **Electron + Vue 3 + Pixi.js** 构建，确保了流畅的动画效果和跨平台的兼容性。
+
+![Tana 截图](https://raw.githubusercontent.com/your-username/tana-desktop-pet/main/assets/screenshot.png) <!-- 占位符，建议替换为实际截图 -->
 
 ## ✨ 核心特性
 
-- **生动的桌面宠物**：基于 Pixi.js 渲染，拥有流畅的动画效果。窗口透明、无边框、始终置顶，确保 Tana 在不打扰您工作的同时，也能时刻陪伴。
-- **智能提醒系统**：内置日常提醒模块，按固定时间间隔推送关怀与节奏提示。
-- **调度与通知**：主进程中的 `ReminderScheduler` 统一管理提醒事件，日志调度器每日定时推送日报通知。
-- **记忆/日志**：一键唤起快速输入（默认 `Alt+J`），即时把想法写入本地。每天 18:00 自动推送日报通知，点击可查看当日 Markdown 摘要与条目列表。
-- **安全可靠的进程通信**：采用 Electron 的 `preload.ts` 脚本，严格限制渲染进程可访问的 API，确保了主进程的安全性。
-- **现代化的开发体验**：集成 Vite 实现毫秒级的热更新，代码库全面拥抱 TypeScript，并使用 Electron Forge 实现一键构建和打包。
+- **生动的桌面宠物**：基于 Pixi.js 渲染，拥有流畅的待机动画。窗口透明、无边框且始终置顶，确保 Tana 在不打扰您工作的同时，也能时刻陪伴。
+- **智能提醒系统**：内置灵活的提醒调度器 (`ReminderScheduler`)，可根据配置的时间间隔或特定触发条件，推送不同主题的提醒气泡。
+- **轻量化日志**：支持通过全局快捷键（默认为 `Alt+J`）随时唤起速记窗口，记录瞬间的想法。每日定时推送日报通知，并可查看包含 AI 摘要的日志报告。
+- **模块化与可扩展**：主进程逻辑高度模块化，将窗口管理 (`windowManager`)、托盘管理 (`trayManager`)、提醒 (`reminderScheduler`) 及日志服务 (`journalScheduler`, `journalStore`) 等核心功能解耦，易于维护和扩展。
+- **安全可靠**：采用 Electron 的 `preload.ts` 脚本作为渲染进程与主进程之间的安全桥梁，严格控制 API 暴露，确保应用稳定安全。
+- **现代化的开发体验**：集成 Vite 提供毫秒级的热更新，代码库全面拥抱 TypeScript，并使用 Electron Forge 实现一键化构建与打包。
 
 ## 🚀 快速开始
 
 ### 环境要求
 
 - [Node.js](https://nodejs.org/) (建议使用 v18 或更高版本)
-- [npm](https://www.npmjs.com/) (通常随 Node.js 一同安装)
+- [npm](https://www.npmjs.com/)
 
 ### 安装与运行
 
 1.  **克隆仓库**
-
     ```bash
     git clone https://github.com/your-username/tana-desktop-pet.git
     cd tana-desktop-pet
     ```
 
 2.  **安装依赖**
-
     ```bash
     npm install
     ```
@@ -37,33 +39,17 @@ Tana 是一款常驻桌面的可爱史莱姆宠物，它能按节奏推送日常
     ```bash
     npm run dev
     ```
-    此命令会同时启动 Vite 开发服务器、TypeScript 编译器（监视模式）和 Electron 应用。
+    此命令将同时启动 Vite 开发服务器、TypeScript 编译器（监视模式）和 Electron 应用，并支持热重载。
 
-### 开发脚本说明
+## 🛠️ 开发脚本
 
-- `npm run dev`: 启动完整的开发环境。
-- `npm run dev:vite`: 仅启动 Vite 前端开发服务器。
-- `npm run dev:main`: 仅以监视模式编译主进程代码。
-- `npm run dev:electron`: 在 Vite 准备就绪后启动 Electron 应用。
+项目 `package.json` 中提供了一系列脚本，以支持开发、构建和代码质量检查：
 
-在开发模式下，您可以在浏览器的开发者工具中调用 `window.pushMockReminder()` 函数，手动触发一个提醒气泡，以方便调试样式和动画。
-
-## 🛠️ 构建与分发
-
-项目使用 Electron Forge 进行打包。
-
-```bash
-# 构建渲染进程和主进程代码到 dist/ 目录
-npm run build
-
-# 生成适用于当前平台的可执行文件
-npm run package
-
-# 构建并打包成可分发的安装程序 (例如 .dmg, .exe, .deb)
-npm run make
-```
-
-构建产物位于 `out/` 目录。
+- `npm run dev`：启动完整的开发环境。
+- `npm run build`：构建用于生产环境的前端和主进程代码。
+- `npm run make`：在构建后，打包生成适用于当前平台的可分发安装程序。
+- `npm run lint`：使用 ESLint 检查代码质量。
+- `npm run format`：使用 Prettier 自动格式化代码。
 
 ## 📂 项目结构
 
@@ -71,53 +57,58 @@ npm run make
 .
 ├── assets/                  # 静态资源 (应用图标等)
 ├── src/
-│   ├── main/                # Electron 主进程代码
-│   │   ├── services/        # 主进程服务模块
-│   │   ├── appConfig.json   # 默认提醒配置模板
+│   ├── main/                # Electron 主进程
+│   │   ├── services/        # 日志相关服务 (调度、存储、AI摘要)
 │   │   ├── config.ts        # 配置加载逻辑
+│   │   ├── ipcHandlers.ts   # IPC 事件处理器
 │   │   ├── main.ts          # 应用主入口
-│   │   ├── preload.ts       # 预加载脚本
-│   │   └── reminderScheduler.ts # 提醒调度器
-│   ├── renderer/            # 渲染进程代码 (Vue 3)
-│   │   ├── assets/          # 前端静态资源
+│   │   ├── preload.ts       # 预加载脚本 (安全桥梁)
+│   │   ├── reminderScheduler.ts # 提醒调度器
+│   │   ├── trayManager.ts   # 托盘菜单管理器
+│   │   └── windowManager.ts # 窗口管理器
+│   │
+│   ├── renderer/            # 渲染进程 (Vue 3 UI)
+│   │   ├── assets/          # 前端静态资源 (宠物动画)
 │   │   ├── components/      # Vue 组件
-│   │   ├── hooks/           # Composition API Hooks
-│   │   ├── views/           # 视图组件
+│   │   ├── hooks/           # Composition API Hooks (UI 逻辑)
+│   │   ├── views/           # 视图组件 (页面)
 │   │   ├── App.vue          # 根组件
 │   │   └── main.ts          # Vue 应用入口
-│   └── shared/              # 共享类型定义
+│   │
+│   └── shared/              # 主进程与渲染进程共享的类型和常量
+│
 ├── forge.config.js          # Electron Forge 打包配置
 └── package.json             # 项目依赖与脚本
 ```
 
 ## 🧩 配置说明
 
-应用的提醒功能由一个 JSON 文件驱动。首次启动时，应用会将 `src/main/appConfig.json` 的内容复制到用户数据目录中（例如，Linux 上的 `~/.config/Tana/config/appConfig.json`）。之后所有的配置读取和修改都将基于用户目录中的这个文件。
+应用的核心行为由配置文件驱动。首次启动时，应用会将 `src/main/appConfig.json` (默认模板) 的内容复制到用户数据目录中（例如，Linux 上的 `~/.config/Tana/config/appConfig.json`）。之后所有的配置读取与修改都将基于此文件。
 
-要恢复默认配置，只需删除用户目录下的配置文件，应用下次启动时会重新生成。
+若要恢复默认配置，只需删除用户目录下的配置文件即可，应用下次启动时会自动重新生成。
 
-### 配置项示例
+### 主要配置项
 
-- `baseIntervalMinutes`: 调度器的基础轮询时间间隔（分钟）。
-- `reminders`: 包含提醒配置。目前仅有 `daily` 模块，可配置 `triggers` (触发器)、`messages` (消息列表)、`defaultIntervalMinutes` 与 `cooldownMinutes`。
-- `journal`: 日志/日报配置，如 `dailyReportTime`（日报时间，HH:mm）、`hotkey`（快速输入快捷键）、`notifyEnabled`（是否推送日报通知）。
+- `reminders`: 配置不同的提醒模块，如 `daily`（日常提醒），可定义触发器、消息列表和冷却时间。
+- `journal`: 配置日志功能，包括 `dailyReportTime`（日报推送时间）、`hotkey`（速记快捷键）以及 `ai`（AI 摘要服务的模型和 API Key）。
+- `petWindow`: 配置宠物窗口的外观，如 `scale`（缩放比例）。
 
-更新配置后，需要重启应用才能生效。
+**注意**：更新配置后，需要重启应用才能生效。
 
 ## 🤝 贡献指南
 
 我们欢迎任何形式的贡献！如果您希望参与项目，请遵循以下准则：
 
 1.  **Fork 仓库** 并从 `main` 分支创建您的开发分支。
-2.  **编码风格**: 请遵循项目已有的编码风格（TypeScript, 2 空格缩进, 使用分号）。
-3.  **提交信息**: 请使用 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/v1.0.0/) 规范编写提交信息，格式为 `type(scope): summary`。
-4.  **AI Agent 开发**: 如果您是 AI Agent，请务必阅读 `AGENTS.md` 文件，以了解项目的架构和开发规范。
+2.  **编码风格**: 请遵循项目已有的编码风格。运行 `npm run format` 以确保代码格式统一。
+3.  **提交信息**: 请使用 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/v1.0.0/) 规范编写提交信息。
+4.  **AI Agent 开发**: 如果您是 AI Agent，请务必阅读 `AGENTS.md` 文件，它提供了详细的架构和开发规范。
 5.  **发起 Pull Request**: 提交您的更改，并详细说明您所做的修改。
 
 ## 📄 许可证
 
-本项目使用 [ISC License](./LICENSE)。欢迎在保留来源的基础上进行二次开发。
+本项目使用 [ISC License](./LICENSE)。
 
 ---
 
-祝你和 Tana 相处愉快 🧡。
+希望你和 Tana 相处愉快 🧡。
