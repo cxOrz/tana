@@ -10,13 +10,12 @@ import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import rawDefaultConfig from './appConfig.json';
-import type { AppConfig, ReminderMessage, ReminderModule, TriggerConfig } from '../shared';
+import type { AppConfig, ReminderMessage, ReminderModule } from '../shared';
 
 export type {
   AppConfig,
   ReminderMessage,
   ReminderModule,
-  TriggerConfig,
 };
 
 // 以外部 JSON 作为默认配置，避免与磁盘默认值重复维护。

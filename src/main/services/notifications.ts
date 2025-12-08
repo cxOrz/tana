@@ -6,8 +6,6 @@ import { resolveAssetPath } from '../utils';
 
 /**
  * 根据提醒模块的键名返回对应的中文标题。
- * @param {ReminderModuleKey} key - 提醒模块的键名。
- * @returns {string} 模块的中文标题。
  */
 const moduleTitle = (key: ReminderModuleKey): string => {
   switch (key) {
@@ -20,8 +18,6 @@ const moduleTitle = (key: ReminderModuleKey): string => {
 
 /**
  * 根据应用配置决定是否显示一个系统通知。
- * @param {ReminderPayload} payload - 提醒的数据负载。
- * @param {() => void} onClickShowWindow - 当通知被点击时调用的回调函数，通常用于显示主窗口。
  * @returns {Promise<void>}
  */
 export async function maybeShowSystemNotification(

@@ -2,19 +2,8 @@ import type { ReminderModuleKey, ReminderPayload } from '../shared';
 import { AppConfig, ReminderMessage, ReminderModule } from './config';
 import { calculateWorkdayProgress } from './utils';
 
-/**
- * 基础提醒模块的状态。
- * @interface ModuleState
- * @property {number} elapsedMinutes - 自上次触发以来经过的分钟数。
- * @property {number} dailyTotalMinutes - 当天累计的分钟数。
- * @property {number} [lastTriggerAt] - 上次触发的时间戳。
- * @property {number} [nextAvailableAt] - 下次可触发的最早时间戳 (用于冷却)。
- */
 interface ModuleState {
-  elapsedMinutes: number;
-  dailyTotalMinutes: number;
-  lastTriggerAt?: number;
-  nextAvailableAt?: number;
+  elapsedMinutes: number; // 距上次触发的分钟数
 }
 
 type SendReminderFn = (payload: ReminderPayload) => void;
@@ -30,8 +19,9 @@ export class ReminderScheduler {
   private lastTickAt = Date.now();
   private currentDayStamp = getDayStamp(new Date());
 
-  constructor(private readonly sendReminder: SendReminderFn) { }
+  constructor(private readonly sendReminder: SendReminderFn) {}
 
+  /** 启动调度器并立即执行一次 tick */
   start(config: AppConfig): void {
     this.stop();
     this.config = config;
@@ -39,6 +29,7 @@ export class ReminderScheduler {
     this.lastTickAt = Date.now();
     this.currentDayStamp = getDayStamp(new Date());
 
+    // 统一使用基础轮询间隔驱动所有提醒模块。
     const intervalMinutes = Math.max(config.baseIntervalMinutes || 1, 1);
     const intervalMs = intervalMinutes * 60 * 1000;
 
@@ -46,6 +37,7 @@ export class ReminderScheduler {
     this.tick();
   }
 
+  /** 停止调度器 */
   stop(): void {
     if (this.timer) {
       clearInterval(this.timer);
@@ -60,37 +52,45 @@ export class ReminderScheduler {
     const deltaMinutes = Math.max((now - this.lastTickAt) / 60000, 0);
     this.lastTickAt = now;
 
-    if (getDayStamp(new Date(now)) !== this.currentDayStamp) {
-      this.resetDailyStates();
-      this.currentDayStamp = getDayStamp(new Date(now));
-    }
+    this.resetIfNewDay(now); // 过24点重置状态
+    this.processModules(deltaMinutes, now); // 处理每个模块
+  }
 
-    for (const key of Object.keys(this.config.reminders) as ReminderModuleKey[]) {
-      this._processModule(key, deltaMinutes, now);
+  // 过24点重置状态
+  private resetIfNewDay(now: number): void {
+    const dayStamp = getDayStamp(new Date(now));
+    if (dayStamp > this.currentDayStamp) {
+      this.resetDailyStates();
+      this.currentDayStamp = dayStamp;
     }
   }
 
-  private _processModule(key: ReminderModuleKey, deltaMinutes: number, now: number): void {
+  // 处理 reminder 的每个模块，如 daily
+  private processModules(deltaMinutes: number, now: number): void {
+    if (!this.config) return;
+    for (const key of Object.keys(this.config.reminders) as ReminderModuleKey[]) {
+      this.processModule(key, deltaMinutes, now);
+    }
+  }
+
+  // 处理一个模块
+  private processModule(key: ReminderModuleKey, deltaMinutes: number, now: number): void {
     if (!this.config) return;
 
     const moduleConfig = this.config.reminders[key];
     if (!moduleConfig.enabled) return;
 
-    if (!this.moduleStates[key]) {
-      this.moduleStates[key] = this.createInitialStateForModule();
-    }
+    const state = this.getModuleState(key);
+    this.updateStateWithDelta(state, deltaMinutes); // 更新模块运行状态
 
-    const state = this.moduleStates[key]!;
-    state.elapsedMinutes += deltaMinutes;
-    state.dailyTotalMinutes = (state.dailyTotalMinutes || 0) + deltaMinutes;
+    // 还未到触发时间
+    if (!this.reachedTriggerTime(moduleConfig, state)) return;
 
-    if (state.nextAvailableAt && now < state.nextAvailableAt) return;
-    if (!this.shouldTriggerModule(moduleConfig, state)) return;
-
+    // 选一条预设消息
     const message = pickMessage(moduleConfig.messages);
     if (!message) return;
 
-    const context = this.buildContextForModule(state, now, message);
+    const context = this.buildContextForModule(now, message);
     const renderedText = interpolate(message.text, context);
 
     this.sendReminder({
@@ -101,31 +101,31 @@ export class ReminderScheduler {
       context,
     });
 
-    state.lastTriggerAt = now;
-    const cooldownMinutes = moduleConfig.cooldownMinutes ?? moduleConfig.defaultIntervalMinutes;
-    state.nextAvailableAt = now + cooldownMinutes * 60 * 1000;
     state.elapsedMinutes = 0;
   }
 
-  private shouldTriggerModule(moduleConfig: ReminderModule, state: ModuleState): boolean {
-    // For now, only timeElapsed is supported.
-    const timeElapsedTrigger = moduleConfig.triggers.find((t) => t.type === 'timeElapsed');
-    if (timeElapsedTrigger?.thresholdMinutes) {
-      return state.elapsedMinutes >= timeElapsedTrigger.thresholdMinutes;
+  // 获取模块当前状态
+  private getModuleState(key: ReminderModuleKey): ModuleState {
+    // 如果集合中还没有当前模块，则初始化一个
+    if (!this.moduleStates[key]) {
+      this.moduleStates[key] = this.initModuleState(); // 设置初始值
     }
-    // Default to trigger if no valid triggers are defined
-    return true;
+    return this.moduleStates[key]!;
   }
 
-  private buildContextForModule(
-    state: ModuleState,
-    now: number,
-    message: ReminderMessage
-  ): Record<string, unknown> {
-    const context: Record<string, unknown> = {
-      timestamp: now,
-      dailyTotalMinutes: Math.floor(state.dailyTotalMinutes),
-    };
+  // 更新模块运行状态
+  private updateStateWithDelta(state: ModuleState, deltaMinutes: number): void {
+    state.elapsedMinutes += deltaMinutes; // 更新距离上次触发的时间
+  }
+
+  // 已过触发时间
+  private reachedTriggerTime(moduleConfig: ReminderModule, state: ModuleState): boolean {
+    return state.elapsedMinutes >= moduleConfig.defaultIntervalMinutes;
+  }
+
+  // 构建参数
+  private buildContextForModule(now: number, message: ReminderMessage): Record<string, unknown> {
+    const context: Record<string, unknown> = {};
 
     if (message.type === 'salary' && this.config?.workDay && message.targetEarnSalary) {
       const progress = calculateWorkdayProgress(this.config.workDay, now);
@@ -135,25 +135,23 @@ export class ReminderScheduler {
     return context;
   }
 
-  private createInitialStateForModule(): ModuleState {
-    return {
-      elapsedMinutes: 0,
-      dailyTotalMinutes: 0,
-    };
-  }
-
+  // 重置当日所有模块状态
   private resetDailyStates(): void {
-    Object.values(this.moduleStates).forEach((state) => {
-      if (state) {
-        state.elapsedMinutes = 0;
-        state.dailyTotalMinutes = 0;
-        state.lastTriggerAt = undefined;
-        state.nextAvailableAt = undefined;
+    Object.keys(this.moduleStates).forEach((key) => {
+      const moduleKey = key as ReminderModuleKey;
+      if (this.moduleStates[moduleKey]) {
+        this.moduleStates[moduleKey] = this.initModuleState();
       }
     });
   }
+
+  // 重置模块状态
+  private initModuleState(): ModuleState {
+    return { elapsedMinutes: 0 };
+  }
 }
 
+// 填充消息占位符
 function interpolate(template: string, context: Record<string, unknown>): string {
   return template.replace(/{{\s*([\w.]+)\s*}}/g, (_, key) => {
     const value = context[key];
@@ -161,12 +159,16 @@ function interpolate(template: string, context: Record<string, unknown>): string
   });
 }
 
+// 选一条消息
 function pickMessage(messages: ReminderMessage[]): ReminderMessage | undefined {
   if (!messages || messages.length === 0) return undefined;
   const index = Math.floor(Math.random() * messages.length);
   return messages[index];
 }
 
-function getDayStamp(date: Date): string {
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+// 获取当天0点时间戳
+function getDayStamp(date: Date): number {
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  return startOfDay.getTime();
 }

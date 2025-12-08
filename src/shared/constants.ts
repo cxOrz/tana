@@ -24,4 +24,4 @@ export const IPC_CHANNELS = {
   JOURNAL_OPEN_REPORT: 'journal:open-report',
 };
 
-export const APP_USER_MODEL_ID = 'com.cxorz.tana'; // Windows 使用的用户模型 ID。
+export const APP_USER_MODEL_ID = 'com.cxOrz.tana'; // Windows 使用的用户模型 ID。

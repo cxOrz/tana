@@ -1,8 +1,6 @@
 // 主进程和渲染层的共有配置
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

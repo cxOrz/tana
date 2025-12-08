@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ES2022"],
-    "module": "CommonJS",
+    "target": "esnext",
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
     "outDir": "../../dist",
     "noEmit": false,
     "rootDir": ".."

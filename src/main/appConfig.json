@@ -26,15 +26,7 @@
   "reminders": {
     "daily": {
       "enabled": true,
-      "defaultIntervalMinutes": 45,
-      "cooldownMinutes": 5,
-      "triggers": [
-        {
-          "id": "daily-interval",
-          "type": "timeElapsed",
-          "thresholdMinutes": 45
-        }
-      ],
+      "defaultIntervalMinutes": 30,
       "messages": [
         {
           "id": "daily-1",

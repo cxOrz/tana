@@ -21,15 +21,7 @@ export type ReminderConfigMap = Record<ReminderModuleKey, ReminderModule>;
 export interface ReminderModule {
   enabled: boolean; // 是否启用此模块。
   defaultIntervalMinutes: number; // 默认的触发时间间隔（分钟）。
-  cooldownMinutes?: number; // 触发后的冷却时间（分钟）。
-  triggers: TriggerConfig[]; // 触发此模块的条件列表。
   messages: ReminderMessage[]; // 此模块可发送的消息列表。
-}
-
-export interface TriggerConfig {
-  id: string; // 触发器的唯一标识符。
-  type: 'timeElapsed' | 'idle' | 'custom'; // 时间流逝、用户空闲或自定义事件触发。
-  thresholdMinutes?: number; // 时间流逝触发器的阈值（分钟）。
 }
 
 export interface ReminderMessage {
