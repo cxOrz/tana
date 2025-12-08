@@ -1,123 +1,89 @@
 # Tana 桌面宠物
 
-Tana 是一款常驻桌面的可爱史莱姆宠物，它能按节奏推送日常提醒，并提供轻量的日报。项目基于 Electron + Vue 3 + Pixi.js 构建，可一键打包成跨平台桌面应用。
+Tana 是基于 Electron + Vue 3 + Pixi.js 构建的桌面宠物。它常驻桌面，以透明置顶的宠物形象陪伴用户，并按节奏推送提醒与日报通知。
 
-## ✨ 核心特性
-
-- **生动的桌面宠物**：基于 Pixi.js 渲染，拥有流畅的动画效果。窗口透明、无边框、始终置顶，确保 Tana 在不打扰您工作的同时，也能时刻陪伴。
-- **智能提醒系统**：内置日常提醒模块，按固定时间间隔推送关怀与节奏提示。
-- **调度与通知**：主进程中的 `ReminderScheduler` 统一管理提醒事件，日志调度器每日定时推送日报通知。
-- **记忆/日志**：一键唤起快速输入（默认 `Alt+J`），即时把想法写入本地。每天 18:00 自动推送日报通知，点击可查看当日 Markdown 摘要与条目列表。
-- **安全可靠的进程通信**：采用 Electron 的 `preload.ts` 脚本，严格限制渲染进程可访问的 API，确保了主进程的安全性。
-- **现代化的开发体验**：集成 Vite 实现毫秒级的热更新，代码库全面拥抱 TypeScript，并使用 Electron Forge 实现一键构建和打包。
+## ✨ 特性
+- **桌面宠物与动画**：使用 Pixi.js 渲染透明、无边框、可拖拽的宠物窗口，保持流畅动画表现。
+- **提醒与日报**：主进程调度周期性提醒，支持每天固定时间推送日报通知，并通过快捷键唤起快速记录。
+- **安全通信**：预加载脚本隔离主渲染进程，只暴露受控 IPC API，降低安全风险。
+- **现代工具链**：Vite 提供快速开发体验，Electron Forge 负责打包分发，代码全量使用 TypeScript。
 
 ## 🚀 快速开始
+### 🛠️ 环境要求
+- Node.js 18 或更高版本
+- npm（随 Node.js 安装）
 
-### 环境要求
-
-- [Node.js](https://nodejs.org/) (建议使用 v18 或更高版本)
-- [npm](https://www.npmjs.com/) (通常随 Node.js 一同安装)
-
-### 安装与运行
-
-1.  **克隆仓库**
-
-    ```bash
-    git clone https://github.com/your-username/tana-desktop-pet.git
-    cd tana-desktop-pet
-    ```
-
-2.  **安装依赖**
-
-    ```bash
-    npm install
-    ```
-
-3.  **启动开发环境**
-    ```bash
-    npm run dev
-    ```
-    此命令会同时启动 Vite 开发服务器、TypeScript 编译器（监视模式）和 Electron 应用。
-
-### 开发脚本说明
-
-- `npm run dev`: 启动完整的开发环境。
-- `npm run dev:vite`: 仅启动 Vite 前端开发服务器。
-- `npm run dev:main`: 仅以监视模式编译主进程代码。
-- `npm run dev:electron`: 在 Vite 准备就绪后启动 Electron 应用。
-
-在开发模式下，您可以在浏览器的开发者工具中调用 `window.pushMockReminder()` 函数，手动触发一个提醒气泡，以方便调试样式和动画。
-
-## 🛠️ 构建与分发
-
-项目使用 Electron Forge 进行打包。
-
+### 📦 安装与运行
 ```bash
-# 构建渲染进程和主进程代码到 dist/ 目录
-npm run build
+# 克隆仓库
+git clone https://github.com/your-username/tana.git
+cd tana
 
-# 生成适用于当前平台的可执行文件
-npm run package
+# 安装依赖
+npm install
 
-# 构建并打包成可分发的安装程序 (例如 .dmg, .exe, .deb)
-npm run make
+# 启动开发模式（同时启动 Vite、主进程编译与 Electron）
+npm run dev
 ```
 
-构建产物位于 `out/` 目录。
+### 🧾 常用脚本
+- `npm run dev`：并行启动 Vite、主进程编译与 Electron，适合日常开发。
+- `npm run dev:vite` / `npm run dev:main` / `npm run dev:electron`：分别单独启动前端、主进程监视和 Electron。
+- `npm run build`：构建渲染与主进程产物到 `dist/`。
+- `npm run make`：在构建后生成当前平台的安装包（内部调用 Electron Forge）。
+- `npm run lint` / `npm run lint:fix`：执行 ESLint 检查或自动修复。
+- `npm run format`：使用 Prettier 统一格式。
 
-## 📂 项目结构
+## 配置
+- **默认模板**：`src/main/appConfig.json`。
+- **运行时配置**：首次启动会将默认模板写入用户主目录 `~/.tana/config.json`，后续读写均基于该文件。
+- **重置配置**：删除 `~/.tana/config.json` 后重启应用即可重新生成默认配置。
 
+主要配置字段：
+- `baseIntervalMinutes`：提醒调度的基础轮询间隔（分钟）。
+- `reminders`：提醒模块配置，包括触发器、消息列表与冷却时间。
+- `journal`：日志与日报设置，如每日推送时间、快捷键与通知开关。
+
+## 项目结构
 ```
 .
-├── assets/                  # 静态资源 (应用图标等)
+├── assets/                  # 应用静态资源（图标等）
 ├── src/
-│   ├── main/                # Electron 主进程代码
-│   │   ├── services/        # 主进程服务模块
-│   │   ├── appConfig.json   # 默认提醒配置模板
-│   │   ├── config.ts        # 配置加载逻辑
-│   │   ├── main.ts          # 应用主入口
+│   ├── main/                # Electron 主进程
+│   │   ├── services/        # 系统通知、快捷键等服务
+│   │   ├── appConfig.json   # 默认配置模板
+│   │   ├── config.ts        # 读写 ~/.tana/config.json
+│   │   ├── ipcHandlers.ts   # IPC 通道注册
+│   │   ├── main.ts          # 主进程入口
 │   │   ├── preload.ts       # 预加载脚本
-│   │   └── reminderScheduler.ts # 提醒调度器
-│   ├── renderer/            # 渲染进程代码 (Vue 3)
+│   │   ├── reminderScheduler.ts # 提醒与日报调度
+│   │   └── trayManager.ts / windowManager.ts / utils.ts
+│   ├── renderer/            # Vue 3 渲染进程
 │   │   ├── assets/          # 前端静态资源
 │   │   ├── components/      # Vue 组件
-│   │   ├── hooks/           # Composition API Hooks
-│   │   ├── views/           # 视图组件
+│   │   ├── hooks/           # 组合式逻辑
+│   │   ├── lib/             # UI 工具与样式
+│   │   ├── views/           # 页面视图
 │   │   ├── App.vue          # 根组件
-│   │   └── main.ts          # Vue 应用入口
-│   └── shared/              # 共享类型定义
-├── forge.config.js          # Electron Forge 打包配置
-└── package.json             # 项目依赖与脚本
+│   │   └── main.ts          # 前端入口
+│   └── shared/              # 主渲染共享类型与常量
+│       ├── configTypes.d.ts
+│       ├── constants.ts
+│       ├── index.d.ts
+│       ├── journalTypes.d.ts
+│       └── reminderTypes.d.ts
+├── forge.config.js          # Electron Forge 配置
+├── vite.config.ts           # Vite 配置
+└── package.json             # 依赖与脚本
 ```
 
-## 🧩 配置说明
+## 🧭 开发者提示
+- 新增 IPC 通道时，在 `src/shared/constants.ts` 声明常量，并在 `src/main/ipcHandlers.ts` 注册，再通过 `src/main/preload.ts` 暴露。
+- 修改提醒或日报逻辑时，同步更新共享类型（`src/shared`）与默认模板，避免主/渲染进程行为不一致。
+- 调试提醒气泡：在渲染进程的开发者工具调用 `window.pushMockReminder()` 触发示例提醒。
 
-应用的提醒功能由一个 JSON 文件驱动。首次启动时，应用会将 `src/main/appConfig.json` 的内容复制到用户数据目录中（例如，Linux 上的 `~/.config/Tana/config/appConfig.json`）。之后所有的配置读取和修改都将基于用户目录中的这个文件。
+## 贡献
+欢迎 Issue 与 Pull Request。提交前请遵循仓库的代码风格，推荐使用 Conventional Commits，并阅读 [`AGENTS.md`](./AGENTS.md) 获取主渲染协作约定。
 
-要恢复默认配置，只需删除用户目录下的配置文件，应用下次启动时会重新生成。
-
-### 配置项示例
-
-- `baseIntervalMinutes`: 调度器的基础轮询时间间隔（分钟）。
-- `reminders`: 包含提醒配置。目前仅有 `daily` 模块，可配置 `triggers` (触发器)、`messages` (消息列表)、`defaultIntervalMinutes` 与 `cooldownMinutes`。
-- `journal`: 日志/日报配置，如 `dailyReportTime`（日报时间，HH:mm）、`hotkey`（快速输入快捷键）、`notifyEnabled`（是否推送日报通知）。
-
-更新配置后，需要重启应用才能生效。
-
-## 🤝 贡献指南
-
-我们欢迎任何形式的贡献！如果您希望参与项目，请遵循以下准则：
-
-1.  **Fork 仓库** 并从 `main` 分支创建您的开发分支。
-2.  **编码风格**: 请遵循项目已有的编码风格（TypeScript, 2 空格缩进, 使用分号）。
-3.  **提交信息**: 请使用 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/v1.0.0/) 规范编写提交信息，格式为 `type(scope): summary`。
-4.  **AI Agent 开发**: 如果您是 AI Agent，请务必阅读 `AGENTS.md` 文件，以了解项目的架构和开发规范。
-5.  **发起 Pull Request**: 提交您的更改，并详细说明您所做的修改。
-
-## 📄 许可证
-
-本项目使用 [ISC License](./LICENSE)。欢迎在保留来源的基础上进行二次开发。
-
----
-
-祝你和 Tana 相处愉快 🧡。
+## 许可证
+本项目采用 [ISC License](./LICENSE)。
