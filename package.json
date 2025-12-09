@@ -18,11 +18,12 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json && tsc --noEmit -p src/main/tsconfig.json"
   },
   "keywords": [],
   "author": "cxOrz",
-  "license": "ISC",
+  "license": "MIT",
   "description": "Tana is a desktop pet",
   "devDependencies": {
     "@electron-forge/cli": "^7.10.2",

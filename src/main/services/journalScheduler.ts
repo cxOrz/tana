@@ -102,7 +102,7 @@ export class JournalScheduler {
    * 尝试生成并保存当日的 AI 日报摘要。
    */
   private async maybeGenerateSummary(day: JournalDay, dayStamp: string): Promise<void> {
-    if (!this.config?.journal?.ai) return;
+    if (!this.config?.ai) return;
     try {
       const summary = await generateJournalSummary(day, this.config);
       if (summary) {

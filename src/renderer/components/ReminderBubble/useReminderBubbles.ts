@@ -7,58 +7,31 @@ import {
   type ComputedRef,
   type Ref,
 } from 'vue';
-import type { ReminderModuleKey, ReminderPayload } from '../../shared';
-
-/**
- * @file useReminderBubbles.ts
- * @description
- * 负责管理和显示提醒气泡的 Vue Composition API hook。
- * 它包含一个提醒队列，并处理单个提醒的显示、自动隐藏和手动关闭逻辑。
- */
-
-/**
- * 模块键到中文标签的映射。
- */
-const moduleLabelMap: Record<ReminderModuleKey, string> = {
-  daily: '日常提醒',
-};
+import type { ReminderPayload } from '@/../shared';
 
 const isDev = import.meta.env.DEV;
 const DISPLAY_DURATION_MS = 6000;
 const DEV_GLOBAL_PUSH_MOCK_KEY = 'pushMockReminder';
+const REMINDER_LABEL = '日常提醒';
 
-/**
- * @interface UseReminderBubblesResult
- * @description `useReminderBubbles` hook 的返回值类型。
- * @property {Readonly<Ref<ReminderPayload | null>>} activeReminder - 当前活动的提醒，只读。
- * @property {Readonly<ComputedRef<string>>} activeModuleLabel - 当前活动提醒的模块标签，只读。
- * @property {Readonly<ComputedRef<string>>} activeTime - 当前活动提醒的显示时间，只读。
- * @property {boolean} isDev - 是否处于开发环境。
- * @property {() => void} dismissReminder - 关闭当前活动的提醒。
- * @property {(module?: ReminderModuleKey) => void} pushMockReminder - 推送一个用于调试的模拟提醒。
- */
 export interface UseReminderBubblesResult {
   activeReminder: Readonly<Ref<ReminderPayload | null>>;
-  activeModuleLabel: Readonly<ComputedRef<string>>;
+  activeLabel: Readonly<ComputedRef<string>>;
   activeTime: Readonly<ComputedRef<string>>;
   isDev: boolean;
   dismissReminder: () => void;
-  pushMockReminder: (module?: ReminderModuleKey) => void;
+  pushMockReminder: () => void;
 }
 
 /**
  * 提供提醒队列与显示控制的逻辑。
- * @returns {UseReminderBubblesResult}
  */
 export function useReminderBubbles(): UseReminderBubblesResult {
   const reminderQueue = ref<ReminderPayload[]>([]);
   const internalActiveReminder = ref<ReminderPayload | null>(null);
   const activeReminder = readonly(internalActiveReminder);
 
-  const activeModuleLabel = computed(() => {
-    const module = internalActiveReminder.value?.module;
-    return module ? (moduleLabelMap[module] ?? '提醒') : '';
-  });
+  const activeLabel = computed(() => (internalActiveReminder.value ? REMINDER_LABEL : ''));
 
   const activeTime = computed(() => {
     const current = internalActiveReminder.value;
@@ -69,8 +42,6 @@ export function useReminderBubbles(): UseReminderBubblesResult {
       : date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
   });
 
-  const mockModules: ReminderModuleKey[] = ['daily'];
-  let mockIndex = 0;
   let reminderTimer: number | null = null;
   let unsubscribeReminder: (() => void) | null = null;
 
@@ -119,27 +90,18 @@ export function useReminderBubbles(): UseReminderBubblesResult {
     showNextReminder();
   };
 
-  const takeMockModule = (): ReminderModuleKey => {
-    const index = mockIndex % mockModules.length;
-    mockIndex += 1;
-    return mockModules[index] ?? 'daily';
-  };
-
   /**
    * 推送一个用于调试的模拟提醒。
-   * @param {ReminderModuleKey} [module] - 模拟提醒的模块类型。
    */
-  const pushMockReminder = (module?: ReminderModuleKey) => {
-    const selectedModule = module ?? takeMockModule();
+  const pushMockReminder = () => {
     const messageId =
       typeof crypto !== 'undefined' && 'randomUUID' in crypto
         ? crypto.randomUUID()
         : `mock-${Date.now()}`;
 
     const payload: ReminderPayload = {
-      module: selectedModule,
       messageId,
-      text: `[调试] 这是一条 ${moduleLabelMap[selectedModule]} 消息。`,
+      text: `[调试] 这是一条 ${REMINDER_LABEL} 消息。`,
       timestamp: Date.now(),
       context: { mock: true },
     };
@@ -174,7 +136,7 @@ export function useReminderBubbles(): UseReminderBubblesResult {
 
   return {
     activeReminder,
-    activeModuleLabel,
+    activeLabel,
     activeTime,
     isDev,
     dismissReminder,

@@ -1,32 +1,37 @@
-# Tana 桌面宠物
+# Tana Slime
 
-Tana 是基于 Electron + Vue 3 + Pixi.js 构建的桌面宠物。它常驻桌面，以透明置顶的宠物形象陪伴用户，并按节奏推送提醒与日报通知。
+Tana 是一只史莱姆，陪你度过工作和学习生活~
 
 ## ✨ 特性
-- **桌面宠物与动画**：使用 Pixi.js 渲染透明、无边框、可拖拽的宠物窗口，保持流畅动画表现。
-- **提醒与日报**：主进程调度周期性提醒，支持每天固定时间推送日报通知，并通过快捷键唤起快速记录。
-- **安全通信**：预加载脚本隔离主渲染进程，只暴露受控 IPC API，降低安全风险。
-- **现代工具链**：Vite 提供快速开发体验，Electron Forge 负责打包分发，代码全量使用 TypeScript。
+
+- **宠物史莱姆**：使用 Pixi.js 渲染透明、无边框、可拖拽的史莱姆。
+- **提醒与日报**：周期性触发随机消息；通过 <kbd>ALT</kbd> + <kbd>J</kbd> 唤起快速记录；每晚生成日报、推送通知。
+- **现代技术栈**：Vue@3.5 + Vite@7 + TailwindCSS@4.1 + Electron@39 + TypeScript@5.9，激进式更新。
 
 ## 🚀 快速开始
+
 ### 🛠️ 环境要求
-- Node.js 18 或更高版本
-- npm（随 Node.js 安装）
+
+| Node | OS              |
+| ---- | --------------- |
+| v20+ | Linux / Windows |
 
 ### 📦 安装与运行
+
 ```bash
 # 克隆仓库
-git clone https://github.com/your-username/tana.git
+git clone https://github.com/cxOrz/tana.git
 cd tana
 
 # 安装依赖
 npm install
 
-# 启动开发模式（同时启动 Vite、主进程编译与 Electron）
+# 启动开发模式
 npm run dev
 ```
 
 ### 🧾 常用脚本
+
 - `npm run dev`：并行启动 Vite、主进程编译与 Electron，适合日常开发。
 - `npm run dev:vite` / `npm run dev:main` / `npm run dev:electron`：分别单独启动前端、主进程监视和 Electron。
 - `npm run build`：构建渲染与主进程产物到 `dist/`。
@@ -34,17 +39,27 @@ npm run dev
 - `npm run lint` / `npm run lint:fix`：执行 ESLint 检查或自动修复。
 - `npm run format`：使用 Prettier 统一格式。
 
-## 配置
-- **默认模板**：`src/main/appConfig.json`。
-- **运行时配置**：首次启动会将默认模板写入用户主目录 `~/.tana/config.json`，后续读写均基于该文件。
-- **重置配置**：删除 `~/.tana/config.json` 后重启应用即可重新生成默认配置。
+### 🚧 启动参数
 
-主要配置字段：
-- `baseIntervalMinutes`：提醒调度的基础轮询间隔（分钟）。
-- `reminders`：提醒模块配置，包括触发器、消息列表与冷却时间。
-- `journal`：日志与日报设置，如每日推送时间、快捷键与通知开关。
+- `--open-journal-input`：打开快速输入窗口。
+- `--open-journal-report`：打开日报总结窗口。
+
+## ⚙️ 配置
+
+- **默认模板**：`src/main/appConfig.json`。
+- **运行时配置**：在用户主目录下 `~/.tana/config.json`，若不存在会在启动时自动生成。
+
+主要配置：
+
+| 关键字                 | 描述                                        |
+| ---------------------- | ------------------------------------------- |
+| reminders              | 提醒模块，消息列表、间隔                    |
+| defaultIntervalMinutes | reminder 模块的触发间隔                     |
+| journal                | 日志与日报设置，如推送时间、快捷键         |
+| ai                     | 全局 AI 能力配置（模型、Key、Base URL）    |
 
 ## 项目结构
+
 ```
 .
 ├── assets/                  # 应用静态资源（图标等）
@@ -78,12 +93,14 @@ npm run dev
 ```
 
 ## 🧭 开发者提示
-- 新增 IPC 通道时，在 `src/shared/constants.ts` 声明常量，并在 `src/main/ipcHandlers.ts` 注册，再通过 `src/main/preload.ts` 暴露。
-- 修改提醒或日报逻辑时，同步更新共享类型（`src/shared`）与默认模板，避免主/渲染进程行为不一致。
-- 调试提醒气泡：在渲染进程的开发者工具调用 `window.pushMockReminder()` 触发示例提醒。
+
+- 新增 IPC 事件，在 `src/shared/constants.ts` 声明常量；在 `src/main/ipcHandlers.ts` 注册到主进程；在 `src/main/preload.ts` 暴露给渲染进程。
+- 调试提醒，仅在开发模式下显示。
 
 ## 贡献
+
 欢迎 Issue 与 Pull Request。提交前请遵循仓库的代码风格，推荐使用 Conventional Commits，并阅读 [`AGENTS.md`](./AGENTS.md) 获取主渲染协作约定。
 
 ## 许可证
-本项目采用 [ISC License](./LICENSE)。
+
+本项目采用 [MIT License](./LICENSE)。

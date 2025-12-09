@@ -16,41 +16,39 @@
   "journal": {
     "dailyReportTime": "18:00",
     "notifyEnabled": true,
-    "hotkey": "Alt+J",
-    "ai": {
-      "model": "google/gemini-3-pro-preview",
-      "apiKey": "YOUR_OPENROUTER_API_KEY",
-      "baseURL": "https://openrouter.ai/api/v1"
-    }
+    "hotkey": "Alt+J"
+  },
+  "ai": {
+    "model": "google/gemini-3-pro-preview",
+    "apiKey": "YOUR_OPENROUTER_API_KEY",
+    "baseURL": "https://openrouter.ai/api/v1"
   },
   "reminders": {
-    "daily": {
-      "enabled": true,
-      "defaultIntervalMinutes": 30,
-      "messages": [
-        {
-          "id": "daily-1",
-          "text": "已经投入一阵子了，起来活动下，顺便记一条想法？"
-        },
-        {
-          "id": "daily-2",
-          "text": "喝口水，舒展一下，保持好状态继续冲。"
-        },
-        {
-          "id": "daily-3",
-          "text": "今天的节奏不错，继续保持！"
-        },
-        {
-          "id": "daily-4",
-          "text": "记得看看身体状态，保持专注也要保持健康。"
-        },
-        {
-          "id": "daily-5",
-          "type": "salary",
-          "targetEarnSalary": 761,
-          "text": "今天已为你赚了 {{ earnedMoney }} 元，继续加油！"
-        }
-      ]
-    }
+    "enabled": true,
+    "defaultIntervalMinutes": 30,
+    "messages": [
+      {
+        "id": "daily-1",
+        "text": "已经投入一阵子了，起来活动下，顺便记一条想法？"
+      },
+      {
+        "id": "daily-2",
+        "text": "喝口水，舒展一下，保持好状态继续冲。"
+      },
+      {
+        "id": "daily-3",
+        "text": "今天的节奏不错，继续保持！"
+      },
+      {
+        "id": "daily-4",
+        "text": "记得看看身体状态，保持专注也要保持健康。"
+      },
+      {
+        "id": "daily-5",
+        "type": "salary",
+        "targetEarnSalary": 761,
+        "text": "今天已为你赚了 {{ earnedMoney }} 元，继续加油！"
+      }
+    ]
   }
 }

@@ -38,7 +38,7 @@ export async function loadJournalDay(dayStamp: string): Promise<JournalDay> {
   try {
     const raw = await fs.readFile(filePath, 'utf-8');
     const parsed = JSON.parse(raw) as JournalDay;
-    return normalizeDay(parsed, dayStamp);
+    return parsed;
   } catch (error) {
     const err = error as NodeJS.ErrnoException;
     if (err.code === 'ENOENT') {
@@ -116,24 +116,7 @@ export async function listJournalDays(limit?: number): Promise<string[]> {
 async function persistDay(day: JournalDay): Promise<void> {
   await ensureJournalDir();
   const filePath = resolveJournalPath(day.date);
-  const normalized = normalizeDay(day, day.date);
-  await fs.writeFile(filePath, JSON.stringify(normalized, null, 2), 'utf-8');
-}
-
-/**
- * 规范化单日数据，确保字段存在。
- * @param {Partial<JournalDay>} day - 原始数据。
- * @param {string} dayStamp - 日期。
- * @returns {JournalDay} 规范化后的数据。
- */
-function normalizeDay(day: Partial<JournalDay>, dayStamp: string): JournalDay {
-  return {
-    date: dayStamp,
-    entries: Array.isArray(day.entries) ? [...day.entries] : [],
-    summary: day.summary
-      ? { draft: day.summary.draft ?? '', model: day.summary.model, generatedAt: day.summary.generatedAt }
-      : undefined,
-  };
+  await fs.writeFile(filePath, JSON.stringify(day, null, 2), 'utf-8');
 }
 
 /**

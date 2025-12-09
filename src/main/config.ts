@@ -10,12 +10,11 @@ import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import rawDefaultConfig from './appConfig.json';
-import type { AppConfig, ReminderMessage, ReminderModule } from '../shared';
+import type { AppConfig, ReminderMessage } from '../shared';
 
 export type {
   AppConfig,
   ReminderMessage,
-  ReminderModule,
 };
 
 // 以外部 JSON 作为默认配置，避免与磁盘默认值重复维护。
@@ -82,7 +81,7 @@ export async function loadAppConfig(): Promise<AppConfig> {
     const parsed = JSON.parse(raw) as AppConfig;
     return parsed;
   } catch (error) {
-    console.warn(`[config] 读取配置失败，使用默认配置: ${configPath}`, error);
-    return DEFAULT_CONFIG;
+    console.error(`[config] 读取配置失败: ${configPath}`, error);
+    throw error;
   }
 }

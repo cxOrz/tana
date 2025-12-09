@@ -1,20 +1,9 @@
 import { Notification } from 'electron';
 import { loadAppConfig } from '../config';
-import type { ReminderModuleKey } from '../../shared/reminderTypes';
 import type { ReminderPayload } from '../../shared';
 import { resolveAssetPath } from '../utils';
 
-/**
- * 根据提醒模块的键名返回对应的中文标题。
- */
-const moduleTitle = (key: ReminderModuleKey): string => {
-  switch (key) {
-    case 'daily':
-      return '日常提醒';
-    default:
-      return 'Tana 提醒';
-  }
-};
+const DEFAULT_TITLE = '日常提醒';
 
 /**
  * 根据应用配置决定是否显示一个系统通知。
@@ -38,7 +27,7 @@ export async function maybeShowSystemNotification(
       : resolveAssetPath('icons', 'logo.png');
 
   const notif = new Notification({
-    title: moduleTitle(payload.module as ReminderModuleKey),
+    title: DEFAULT_TITLE,
     body: payload.text,
     icon: iconPath,
     silent: !!cfg?.notifications?.silent,
@@ -50,5 +39,3 @@ export async function maybeShowSystemNotification(
   });
   notif.show();
 }
-
-export { moduleTitle };

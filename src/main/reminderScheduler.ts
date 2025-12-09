@@ -1,5 +1,5 @@
-import type { ReminderModuleKey, ReminderPayload } from '../shared';
-import { AppConfig, ReminderMessage, ReminderModule } from './config';
+import type { ReminderPayload, ReminderMessage, ReminderModule } from '../shared';
+import { AppConfig } from './config';
 import { calculateWorkdayProgress } from './utils';
 
 interface ModuleState {
@@ -15,7 +15,7 @@ type SendReminderFn = (payload: ReminderPayload) => void;
 export class ReminderScheduler {
   private timer: NodeJS.Timeout | null = null;
   private config: AppConfig | null = null;
-  private moduleStates: Partial<Record<ReminderModuleKey, ModuleState>> = {};
+  private moduleState: ModuleState | null = null;
   private lastTickAt = Date.now();
   private currentDayStamp = getDayStamp(new Date());
 
@@ -25,7 +25,7 @@ export class ReminderScheduler {
   start(config: AppConfig): void {
     this.stop();
     this.config = config;
-    this.moduleStates = {};
+    this.moduleState = null;
     this.lastTickAt = Date.now();
     this.currentDayStamp = getDayStamp(new Date());
 
@@ -68,19 +68,17 @@ export class ReminderScheduler {
   // 处理 reminder 的每个模块，如 daily
   private processModules(deltaMinutes: number, now: number): void {
     if (!this.config) return;
-    for (const key of Object.keys(this.config.reminders) as ReminderModuleKey[]) {
-      this.processModule(key, deltaMinutes, now);
-    }
+    this.processModule(deltaMinutes, now);
   }
 
   // 处理一个模块
-  private processModule(key: ReminderModuleKey, deltaMinutes: number, now: number): void {
+  private processModule(deltaMinutes: number, now: number): void {
     if (!this.config) return;
 
-    const moduleConfig = this.config.reminders[key];
+    const moduleConfig = this.config.reminders;
     if (!moduleConfig.enabled) return;
 
-    const state = this.getModuleState(key);
+    const state = this.getModuleState();
     this.updateStateWithDelta(state, deltaMinutes); // 更新模块运行状态
 
     // 还未到触发时间
@@ -94,7 +92,6 @@ export class ReminderScheduler {
     const renderedText = interpolate(message.text, context);
 
     this.sendReminder({
-      module: key,
       messageId: message.id,
       text: renderedText,
       timestamp: now,
@@ -105,12 +102,11 @@ export class ReminderScheduler {
   }
 
   // 获取模块当前状态
-  private getModuleState(key: ReminderModuleKey): ModuleState {
-    // 如果集合中还没有当前模块，则初始化一个
-    if (!this.moduleStates[key]) {
-      this.moduleStates[key] = this.initModuleState(); // 设置初始值
+  private getModuleState(): ModuleState {
+    if (!this.moduleState) {
+      this.moduleState = this.initModuleState(); // 设置初始值
     }
-    return this.moduleStates[key]!;
+    return this.moduleState;
   }
 
   // 更新模块运行状态
@@ -137,12 +133,7 @@ export class ReminderScheduler {
 
   // 重置当日所有模块状态
   private resetDailyStates(): void {
-    Object.keys(this.moduleStates).forEach((key) => {
-      const moduleKey = key as ReminderModuleKey;
-      if (this.moduleStates[moduleKey]) {
-        this.moduleStates[moduleKey] = this.initModuleState();
-      }
-    });
+    this.moduleState = this.initModuleState();
   }
 
   // 重置模块状态

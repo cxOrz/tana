@@ -1,7 +1,7 @@
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText } from 'ai';
 import type { AppConfig } from '../config';
-import type { JournalAiConfig } from '../../shared/configTypes';
+import type { AiConfig } from '../../shared/configTypes';
 import type { JournalDay, JournalSummary } from '../../shared';
 
 const DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
@@ -16,7 +16,7 @@ export async function generateJournalSummary(
   day: JournalDay,
   config: AppConfig
 ): Promise<JournalSummary | null> {
-  const aiConfig = config.journal?.ai;
+  const aiConfig = config.ai;
   if (!aiConfig) {
     console.warn('[journal] 缺少 AI 配置，跳过摘要生成');
     return null;
@@ -52,7 +52,7 @@ export async function generateJournalSummary(
   }
 }
 
-function createProvider(aiConfig: JournalAiConfig) {
+function createProvider(aiConfig: AiConfig) {
   return createOpenAICompatible({
     name: 'openrouter',
     apiKey: aiConfig.apiKey,
