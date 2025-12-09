@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import DatePicker from '@/components/ui/date-picker/DatePicker.vue';
 import type { JournalDay } from '../../shared/journalTypes';
 
 const route = useRoute();
@@ -32,7 +33,7 @@ const timeFormatter = new Intl.DateTimeFormat('zh-CN', {
 const loadDay = async (dayStamp?: string) => {
   isLoading.value = true;
   errorMsg.value = '';
-  const targetDay = dayStamp || buildDayStamp(new Date());
+  const targetDay = dayStamp || activeDay.value || buildDayStamp(new Date());
   try {
     const data = await window.electronAPI.getJournalDay(targetDay);
     dayData.value = data;
@@ -72,17 +73,34 @@ watch(
       <header class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p class="text-xs uppercase tracking-[0.18em] text-slate-500">今日摘要</p>
-          <h1 class="text-2xl font-semibold text-white">日志 · {{ activeDay }}</h1>
+          <h1 class="flex items-center gap-2 text-2xl font-semibold text-white">
+            <span>日志 ·</span>
+            <DatePicker
+              :model-value="activeDay"
+              :disabled="isLoading"
+              @update:modelValue="(val) => val && loadDay(val)"
+            >
+              <template #trigger>
+                <button
+                  type="button"
+                  class="rounded-none border-0 border-b border-transparent px-2 py-1 text-left font-semibold text-white transition hover:border-b-white/70 hover:bg-transparent focus-visible:border-b-white/80 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="isLoading"
+                >
+                  {{ activeDay }}
+                </button>
+              </template>
+            </DatePicker>
+          </h1>
         </div>
         <div class="flex items-center gap-2 text-sm text-slate-400">
+          <span class="rounded-full bg-white/5 px-3 py-2">快捷键：Alt+J 追加记录</span>
           <button
-            class="rounded-lg bg-white/10 px-3 py-2 font-medium text-slate-100 shadow-inner shadow-white/10 transition hover:bg-white/20"
+            class="rounded-md border border-white/15 bg-transparent px-3 py-2 font-medium text-slate-100 transition hover:border-white/30 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
             type="button"
             @click="loadDay()"
           >
             刷新
           </button>
-          <span class="rounded-full bg-white/5 px-3 py-2">快捷键：Alt+J 追加记录</span>
         </div>
       </header>
 
