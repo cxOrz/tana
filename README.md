@@ -1,6 +1,11 @@
 # Tana Slime
 
+
 Tana 是一只史莱姆，陪你度过工作和学习生活~
+
+<p align="left">
+  <img src="./assets/icons/logo.png" width="200" />
+</p>
 
 ## ✨ 特性
 
