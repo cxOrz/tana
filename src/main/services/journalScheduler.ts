@@ -1,16 +1,11 @@
 import { Notification } from 'electron';
-import type { JournalDay } from '../../shared';
+import type { JournalDay, JournalSummary } from '../../shared';
 import type { AppConfig } from '../config';
 import { loadJournalDay, setJournalSummary } from './journalStore';
 import { resolveAssetPath } from '../utils';
 import { getDayStamp } from './journalStore';
-import { generateJournalSummary } from './journalSummary';
+import { getAIJournalSummary } from './journalSummary';
 
-/**
- * @file journalScheduler.ts
- * @description
- * 负责在每日指定时间推送日志日报提醒，并在点击通知时打开日报窗口。
- */
 export class JournalScheduler {
   private timer: NodeJS.Timeout | null = null;
   private config: AppConfig | null = null;
@@ -18,13 +13,11 @@ export class JournalScheduler {
 
   /**
    * 创建 JournalScheduler。
-   * @param {() => void} onOpenReport - 当用户点击通知时打开日报窗口的回调。
    */
-  constructor(private readonly onOpenReport: () => void) {}
+  constructor(private readonly handleClickNotification: () => void) {}
 
   /**
    * 启动或重启调度器。
-   * @param {AppConfig} cfg - 应用配置。
    */
   start(cfg: AppConfig): void {
     this.stop();
@@ -64,56 +57,50 @@ export class JournalScheduler {
     }
 
     this.lastNotifiedDay = dayStamp;
-    const day = await loadJournalDay(dayStamp);
-    await this.maybeGenerateSummary(day, dayStamp);
-    const count = day.entries.length;
-    this.showNotification(count);
+    const day = await loadJournalDay(dayStamp); // 当天日志数据
+    const summary = await this.getSummary(day, dayStamp); // 获取或生成回顾
+    this.showSummaryNotification(day, summary); // 推送通知
   }
 
-  private showNotification(count: number): void {
+  /**
+   * 推送回顾今日通知
+   */
+  private showSummaryNotification(day: JournalDay, summary?: JournalSummary | null): void {
     const iconPath =
       process.platform === 'win32'
         ? resolveAssetPath('icons', 'logo.ico')
         : resolveAssetPath('icons', 'logo.png');
 
-    const notif = new Notification({
-      title: '今日日志',
-      body:
-        count > 0 ? `今天记录了 ${count} 条内容，快来回顾一下吧` : '今天还没有记录，点击补充一下吧',
-      icon: iconPath,
-      silent: !this.config?.notifications?.systemEnabled
-        ? true
-        : this.config?.notifications?.silent,
-    });
+    const title = summary?.title || 'Yohoo~';
+    const body =
+      summary?.description ||
+      (day.entries.length > 0
+        ? `准备下班啦，快来回顾一下今天吧~`
+        : '今天没有记录哦~ 要看看之前的回顾嘛?');
+
+    const notif = new Notification({ title, body, icon: iconPath });
 
     notif.on('click', () => {
-      try {
-        this.onOpenReport();
-      } catch (error) {
-        console.warn('[journal] 打开日报窗口失败', error);
-      }
+      this.handleClickNotification();
     });
 
-    try {
-      notif.show();
-    } catch (error) {
-      console.warn('[journal] 显示日报通知失败', error);
-    }
+    notif.show();
   }
 
   /**
    * 尝试生成并保存当日的 AI 日报摘要;
    */
-  private async maybeGenerateSummary(day: JournalDay, dayStamp: string): Promise<void> {
+  private async getSummary(day: JournalDay, dayStamp: string): Promise<JournalSummary | undefined> {
     const entryTotal = day.summary?.entryTotal;
     const summaryUpToDate = typeof entryTotal === 'number' && entryTotal === day.entries.length;
     // 记录没有新增，无需再生成
-    if (summaryUpToDate) return;
+    if (summaryUpToDate) return day.summary;
 
-    const summary = await generateJournalSummary(day, this.config?.ai);
+    const summary = await getAIJournalSummary(day, this.config?.ai);
     if (summary) {
-      setJournalSummary(dayStamp, summary);
+      return setJournalSummary(dayStamp, summary);
     }
+    return;
   }
 }
 

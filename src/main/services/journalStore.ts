@@ -17,7 +17,6 @@ export function resolveJournalPath(dayStamp: string): string {
 
 /**
  * 确保日志目录存在。
- * @returns {Promise<string>} 目录路径。
  */
 async function ensureJournalDir(): Promise<string> {
   const dir = join(app.getPath('userData'), JOURNAL_DIR);
@@ -70,10 +69,11 @@ export async function appendJournalEntry(input: AddJournalEntryInput): Promise<J
 /**
  * 写入或更新日报摘要。
  */
-export async function setJournalSummary(dayStamp: string, summary: JournalSummary) {
+export async function setJournalSummary(dayStamp: string, summary: JournalSummary): Promise<JournalSummary> {
   const day = await loadJournalDay(dayStamp);
   day.summary = { ...summary };
   await persistDay(day);
+  return day.summary;
 }
 
 /**

@@ -7,7 +7,6 @@ const DEFAULT_TITLE = '日常提醒';
 
 /**
  * 根据应用配置决定是否显示一个系统通知。
- * @returns {Promise<void>}
  */
 export async function maybeShowSystemNotification(
   payload: ReminderPayload,
@@ -30,7 +29,6 @@ export async function maybeShowSystemNotification(
     title: DEFAULT_TITLE,
     body: payload.text,
     icon: iconPath,
-    silent: !!cfg?.notifications?.silent,
   });
   notif.on('click', () => {
     try {

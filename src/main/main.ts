@@ -16,10 +16,6 @@ import { registerIpcHandlers } from './ipcHandlers';
 import { resolveAssetPath } from './utils';
 import { JournalScheduler } from './services/journalScheduler';
 
-/**
- * @file main.ts
- * @description Electron 应用的主入口点，负责协调应用的生命周期。
- */
 
 let isQuitting = false;
 let reminderScheduler: ReminderScheduler | null = null;
@@ -63,7 +59,6 @@ if (process.platform === 'win32') {
 
 /**
  * 获取或创建唯一的 ReminderScheduler 实例。
- * @returns {ReminderScheduler}
  */
 function ensureScheduler(): ReminderScheduler {
   if (!reminderScheduler) {
@@ -90,7 +85,6 @@ function ensureScheduler(): ReminderScheduler {
 
 /**
  * 获取或创建日志调度器。
- * @returns {JournalScheduler}
  */
 function ensureJournalScheduler(): JournalScheduler {
   if (!journalScheduler) {

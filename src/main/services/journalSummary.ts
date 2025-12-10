@@ -5,10 +5,16 @@ import type { JournalDay, JournalSummary } from '../../shared';
 
 const DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
 
+interface StructuredSummary {
+  title: string;
+  description: string;
+  markdown: string;
+}
+
 /**
- * 使用 AI 生成回顾。
+ * 使用 AI 生成回顾，同时产出用于通知的标题与描述。
  */
-export async function generateJournalSummary(
+export async function getAIJournalSummary(
   day: JournalDay,
   aiConfig?: AiConfig
 ): Promise<JournalSummary | null> {
@@ -26,14 +32,15 @@ export async function generateJournalSummary(
       prompt: buildPrompt(day),
     });
 
-    const draft = text?.trim();
-    if (!draft) return null;
+    const data = parseSummary(text); // 解析响应内容
 
     return {
-      draft,
+      title: data.title,
+      description: data.description,
+      entryTotal: day.entries.length,
+      draft: data.markdown,
       model: model,
       generatedAt: Date.now(),
-      entryTotal: day.entries.length,
     };
   } catch (error) {
     console.warn('[journal] 生成回顾失败', error);
@@ -63,16 +70,18 @@ function buildPrompt(day: JournalDay): string {
     .join('\n');
 
   return [
-    '你是 Tana 的史莱姆小宠物，用轻松、口语化的中文帮我看完下方记录，写一段贴心但客观的总结：',
+    '你是 Tana 的史莱姆小宠物，需要你用轻松、口语化的中文，写一段贴心、客观的总结，下方是用户今天的日志记录：',
     `日期: ${day.date}`,
     '记录列表：',
     entriesText,
     '',
     '要求：',
-    '- 只基于记录内容，不要编造细节或过度自夸。',
+    '- 基于记录内容，不要编造细节或过度自夸。',
     '- 语气活泼一点，可以像朋友絮叨，但保持信息具体，可点缀一些 emoji。',
+    '- 需要生成通知文案，用于推送系统通知，保持简洁易读，不要换行。',
+    '- 请回复一段 JSON 对象字符串，不要有任何额外内容。JSON 对象仅包含 title（通知标题）、description（通知概要）、markdown（总结内容）。',
     '',
-    '输出 Markdown，标题前只加一个 `## `，不要重复或嵌套标题。格式示例（直接输出正文，不要再写“示例”二字）：',
+    'markdown 总结的内容参考：',
     '## 今天的小结',
     '一两句概括今天的主线/氛围，顺便点出重要节点（可提时间/标题/标签）。',
     '## 我看到的亮点和小坑',
@@ -80,4 +89,22 @@ function buildPrompt(day: JournalDay): string {
     '## 明天/接下来',
     '说想继续的动作或一句轻松的鼓励。如果没记录到就写「还没想好」。',
   ].join('\n');
+}
+
+function parseSummary(text: string): StructuredSummary {
+  try {
+    const cleaned = text.replace(/```json|```/gi, '').trim();
+    const parsed = JSON.parse(cleaned) as StructuredSummary;
+    const title = parsed.title?.trim();
+    const description = parsed.description?.trim();
+    const markdown = parsed.markdown?.trim();
+    return { title, description, markdown };
+  } catch (e) {
+    console.error('[Journal] 解析失败', e);
+    return {
+      title: 'Yohoo~',
+      description: '准备下班啦，快来回顾一下今天吧（模型响应解析有异常）~',
+      markdown: text,
+    };
+  }
 }

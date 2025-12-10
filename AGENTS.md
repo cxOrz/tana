@@ -14,7 +14,7 @@
 
 ## House Rules
 - **Type safety**: Use TypeScript with strict typing; avoid `any`. Keep shared definitions in `src/shared`.
-- **Documentation**: Public classes, functions, and methods should include concise Chinese JSDoc describing purpose, parameters, and return values.
+- **Documentation**: Public classes, functions, and methods should include concise Chinese JSDoc describing purpose, but without parameters and return values.
 - **Styling**: Prefer Tailwind CSS utilities; avoid scattering bespoke style files.
 - **IPC boundary**: Only expose renderer-accessible APIs via `src/main/preload.ts`. Declare new channels in `src/shared/constants.ts` and register handlers in `src/main/ipcHandlers.ts`.
 - **Compatibility stance**: This is an aggressive project—do not add legacy/compat code paths or migrations. Assume the latest config, structures, and behaviors; prefer directly updating, overwriting, or deleting old code/paths rather than normalizing or preserving them.

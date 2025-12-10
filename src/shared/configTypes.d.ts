@@ -38,7 +38,6 @@ export interface PetWindowConfig {
 
 export interface NotificationConfig {
   systemEnabled: boolean; // 是否启用系统通知。
-  silent?: boolean; // 是否静默通知（无声音）。
 }
 
 export interface JournalConfig {
