@@ -1,0 +1,61 @@
+name: Publish Packages
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  package:
+    name: Build ${{ matrix.platform }} x64 zip
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            artifact_glob: out/make/zip/linux/x64/*.zip
+          - os: windows-latest
+            platform: windows
+            artifact_glob: out/make/zip/win32/x64/*.zip
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and package
+        run: npm run make
+
+      - name: Upload zip artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tana-${{ matrix.platform }}-x64-zip
+          path: ${{ matrix.artifact_glob }}
+          if-no-files-found: error
+
+  release:
+    name: Attach zips to release
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-artifacts
+
+      - name: Publish release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist-artifacts/**/*.zip
+          fail_on_unmatched_files: true
