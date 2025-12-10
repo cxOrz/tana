@@ -24,6 +24,7 @@ export interface JournalSummary {
   draft: string; // 最近一次生成的 Markdown 摘要。
   model?: string; // 由模型生成的摘要，可区分人工/模型。
   generatedAt?: number; // 摘要生成时间戳 (ms)。
+  entryTotal?: number; // 生成摘要时的记录条数，用于判断摘要是否需要更新。
 }
 
 export interface JournalDay {

@@ -10,8 +10,6 @@ const FILE_EXT = '.json';
 
 /**
  * 解析日期戳的文件路径。
- * @param {string} dayStamp - 格式为 YYYY-MM-DD 的日期。
- * @returns {string} 文件绝对路径。
  */
 export function resolveJournalPath(dayStamp: string): string {
   return join(app.getPath('userData'), JOURNAL_DIR, `${FILE_PREFIX}${dayStamp}${FILE_EXT}`);
@@ -29,8 +27,6 @@ async function ensureJournalDir(): Promise<string> {
 
 /**
  * 加载某一天的日志文件，若不存在则返回空结构。
- * @param {string} dayStamp - 格式为 YYYY-MM-DD 的日期。
- * @returns {Promise<JournalDay>} 当日数据。
  */
 export async function loadJournalDay(dayStamp: string): Promise<JournalDay> {
   await ensureJournalDir();
@@ -51,8 +47,6 @@ export async function loadJournalDay(dayStamp: string): Promise<JournalDay> {
 
 /**
  * 向当日追加一条日志记录。
- * @param {AddJournalEntryInput} input - 记录内容。
- * @returns {Promise<JournalEntry>} 写入后的记录。
  */
 export async function appendJournalEntry(input: AddJournalEntryInput): Promise<JournalEntry> {
   const ts = Number.isFinite(input.ts) ? Number(input.ts) : Date.now();
@@ -75,27 +69,15 @@ export async function appendJournalEntry(input: AddJournalEntryInput): Promise<J
 
 /**
  * 写入或更新日报摘要。
- * @param {string} dayStamp - 日期。
- * @param {JournalSummary} summary - 摘要内容。
- * @returns {Promise<JournalSummary>} 持久化后的摘要。
  */
-export async function setJournalSummary(
-  dayStamp: string,
-  summary: JournalSummary
-): Promise<JournalSummary> {
+export async function setJournalSummary(dayStamp: string, summary: JournalSummary) {
   const day = await loadJournalDay(dayStamp);
-  day.summary = {
-    ...summary,
-    generatedAt: summary.generatedAt ?? Date.now(),
-  };
+  day.summary = { ...summary };
   await persistDay(day);
-  return day.summary;
 }
 
 /**
  * 列出已有的日期戳，按时间降序。
- * @param {number} [limit] - 限制返回的天数。
- * @returns {Promise<string[]>} 日期戳列表。
  */
 export async function listJournalDays(limit?: number): Promise<string[]> {
   const dir = await ensureJournalDir();
@@ -109,9 +91,7 @@ export async function listJournalDays(limit?: number): Promise<string[]> {
 }
 
 /**
- * 持久化单日数据。
- * @param {JournalDay} day - 当日数据。
- * @returns {Promise<void>}
+ * 写入日志数据。
  */
 async function persistDay(day: JournalDay): Promise<void> {
   await ensureJournalDir();
@@ -121,8 +101,6 @@ async function persistDay(day: JournalDay): Promise<void> {
 
 /**
  * 生成日期戳，格式 YYYY-MM-DD。
- * @param {Date} date - 目标日期。
- * @returns {string} 日期字符串。
  */
 export function getDayStamp(date: Date): string {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;

@@ -78,9 +78,12 @@ export class JournalScheduler {
 
     const notif = new Notification({
       title: '今日日志',
-      body: count > 0 ? `今天记录了 ${count} 条内容，点击查看摘要` : '今天还没有记录，点击补充一下吧',
+      body:
+        count > 0 ? `今天记录了 ${count} 条内容，快来回顾一下吧` : '今天还没有记录，点击补充一下吧',
       icon: iconPath,
-      silent: !this.config?.notifications?.systemEnabled ? true : this.config?.notifications?.silent,
+      silent: !this.config?.notifications?.systemEnabled
+        ? true
+        : this.config?.notifications?.silent,
     });
 
     notif.on('click', () => {
@@ -99,17 +102,17 @@ export class JournalScheduler {
   }
 
   /**
-   * 尝试生成并保存当日的 AI 日报摘要。
+   * 尝试生成并保存当日的 AI 日报摘要;
    */
   private async maybeGenerateSummary(day: JournalDay, dayStamp: string): Promise<void> {
-    if (!this.config?.ai) return;
-    try {
-      const summary = await generateJournalSummary(day, this.config);
-      if (summary) {
-        await setJournalSummary(dayStamp, summary);
-      }
-    } catch (error) {
-      console.warn('[journal] 生成日报摘要失败', error);
+    const entryTotal = day.summary?.entryTotal;
+    const summaryUpToDate = typeof entryTotal === 'number' && entryTotal === day.entries.length;
+    // 记录没有新增，无需再生成
+    if (summaryUpToDate) return;
+
+    const summary = await generateJournalSummary(day, this.config?.ai);
+    if (summary) {
+      setJournalSummary(dayStamp, summary);
     }
   }
 }

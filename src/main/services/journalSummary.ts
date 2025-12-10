@@ -1,32 +1,20 @@
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText } from 'ai';
-import type { AppConfig } from '../config';
 import type { AiConfig } from '../../shared/configTypes';
 import type { JournalDay, JournalSummary } from '../../shared';
 
 const DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
 
 /**
- * 使用 AI 生成当日日志的摘要。
- * @param {JournalDay} day - 当日的日志数据。
- * @param {AppConfig} config - 应用配置。
- * @returns {Promise<JournalSummary | null>} 成功时返回摘要，失败或缺少配置时返回 null。
+ * 使用 AI 生成回顾。
  */
 export async function generateJournalSummary(
   day: JournalDay,
-  config: AppConfig
+  aiConfig?: AiConfig
 ): Promise<JournalSummary | null> {
-  const aiConfig = config.ai;
-  if (!aiConfig) {
-    console.warn('[journal] 缺少 AI 配置，跳过摘要生成');
-    return null;
-  }
-
-  const apiKey = aiConfig.apiKey?.trim();
-  const model = aiConfig.model?.trim();
-  const isPlaceholderKey = apiKey === 'YOUR_OPENROUTER_API_KEY';
-  if (!apiKey || isPlaceholderKey || !model) {
-    console.warn('[journal] 缺少 AI 配置，跳过摘要生成');
+  const apiKey = aiConfig?.apiKey?.trim();
+  const model = aiConfig?.model?.trim();
+  if (!apiKey || apiKey === 'YOUR_OPENROUTER_API_KEY' || !model) {
     return null;
   }
   if (!day.entries.length) return null;
@@ -43,11 +31,12 @@ export async function generateJournalSummary(
 
     return {
       draft,
-      model: aiConfig.model,
+      model: model,
       generatedAt: Date.now(),
+      entryTotal: day.entries.length,
     };
   } catch (error) {
-    console.warn('[journal] 生成摘要失败', error);
+    console.warn('[journal] 生成回顾失败', error);
     return null;
   }
 }
