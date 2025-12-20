@@ -1,7 +1,6 @@
 # Tana Slime
 
-
-Tana 是一只史莱姆，陪你度过工作和学习生活~
+Tana 是一只史莱姆，陪你度过难熬的工作时光~
 
 <p align="left">
   <img src="./assets/icons/logo.png" width="200" />
@@ -9,11 +8,18 @@ Tana 是一只史莱姆，陪你度过工作和学习生活~
 
 ## ✨ 特性
 
-- **宠物史莱姆**：使用 Pixi.js 渲染透明、无边框、可拖拽的史莱姆。
-- **提醒与日报**：周期性触发随机消息；通过 <kbd>ALT</kbd> + <kbd>J</kbd> 唤起快速记录；每晚生成日报、推送通知。
+- **桌宠**：一只史莱姆，可拖放到副屏养着，陪你上班。
+- **随机消息推送**：通过系统通知，提醒你已赚多少钱、去放松、喝水；支持自定义配置；
+- **日记与 AI 回顾**：使用快捷键 <kbd>ALT</kbd> + <kbd>J</kbd> 唤起速记，随时记录想法、吐槽；每晚生成 AI 回顾，点击通知查看。
 - **现代技术栈**：Vue@3.5 + Vite@7 + TailwindCSS@4.1 + Electron@39 + TypeScript@5.9，激进式更新。
 
-## 🚀 快速开始
+## 👾 实际效果
+
+![Image](https://github.com/user-attachments/assets/3962819a-7bf9-4e34-aba8-f8af490a816b)
+
+![Image](https://github.com/user-attachments/assets/6e0778eb-f47c-4feb-8651-6d5498a89af2)
+
+## 🚀 快速开发
 
 ### 🛠️ 环境要求
 
@@ -21,7 +27,7 @@ Tana 是一只史莱姆，陪你度过工作和学习生活~
 | ---- | --------------- |
 | v20+ | Linux / Windows |
 
-### 📦 安装与运行
+### 📦 项目运行
 
 ```bash
 # 克隆仓库
@@ -44,7 +50,7 @@ npm run dev
 - `npm run lint` / `npm run lint:fix`：执行 ESLint 检查或自动修复。
 - `npm run format`：使用 Prettier 统一格式。
 
-### 🚧 启动参数
+### 🚧 启动参数（调试）
 
 - `--open-journal-input`：打开快速输入窗口。
 - `--open-journal-report`：打开日报总结窗口。
@@ -56,12 +62,11 @@ npm run dev
 
 主要配置：
 
-| 关键字                 | 描述                                        |
-| ---------------------- | ------------------------------------------- |
-| reminders              | 提醒模块，消息列表、间隔                    |
-| defaultIntervalMinutes | reminder 模块的触发间隔                     |
-| journal                | 日志与日报设置，如推送时间、快捷键         |
-| ai                     | 全局 AI 能力配置（模型、Key、Base URL）    |
+| 关键字    | 描述                               |
+| --------- | ---------------------------------- |
+| reminders | 消息列表、间隔                     |
+| journal   | 日志与日报设置，如推送时间、快捷键 |
+| ai        | AI 能力配置（模型、Key、Base URL） |
 
 ## 项目结构
 
@@ -100,7 +105,6 @@ npm run dev
 ## 🧭 开发者提示
 
 - 新增 IPC 事件，在 `src/shared/constants.ts` 声明常量；在 `src/main/ipcHandlers.ts` 注册到主进程；在 `src/main/preload.ts` 暴露给渲染进程。
-- 调试提醒，仅在开发模式下显示。
 
 ## 贡献
 

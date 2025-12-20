@@ -1,5 +1,4 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { ReminderPayload } from '../shared';
 import type { AddJournalEntryInput, JournalDay, JournalSummary } from '../shared/journalTypes';
 
 // 由于开启 sandbox 后 preload 无法访问相对模块，这里内联 IPC 渠道常量。
@@ -7,8 +6,6 @@ const IPC_CHANNELS = {
   WILL_SHOW: 'app:will-show',
   WILL_HIDE: 'app:will-hide',
   HIDE_ACK: 'app:hide-ack',
-  PUSH_REMINDER: 'reminder:push',
-  SHOW_SYSTEM_NOTIFICATION: 'notify:system',
   JOURNAL_ADD_ENTRY: 'journal:add-entry',
   JOURNAL_GET_DAY: 'journal:get-day',
   JOURNAL_LIST_DAYS: 'journal:list-days',
@@ -49,28 +46,6 @@ const electronAPI = {
    * 这通常在执行完隐藏动画后调用。
    */
   notifyHideReady: () => ipcRenderer.send(IPC_CHANNELS.HIDE_ACK),
-
-  /**
-   * 注册一个用于接收提醒事件的回调。
-   * @param {(payload: ReminderPayload) => void} callback - 当收到提醒时调用的回调函数。
-   * @returns {() => void} 一个用于取消监听的函数。
-   */
-  onReminder: (callback: (payload: ReminderPayload) => void) => {
-    const listener = (_event: Electron.IpcRendererEvent, payload: ReminderPayload) =>
-      callback(payload);
-    ipcRenderer.on(IPC_CHANNELS.PUSH_REMINDER, listener);
-    return () => {
-      ipcRenderer.removeListener(IPC_CHANNELS.PUSH_REMINDER, listener);
-    };
-  },
-
-  /**
-   * 请求主进程显示一个系统通知。
-   * @param {ReminderPayload} payload - 提醒的数据负载。
-   * @returns {Promise<void>}
-   */
-  notifySystem: (payload: ReminderPayload) =>
-    ipcRenderer.invoke(IPC_CHANNELS.SHOW_SYSTEM_NOTIFICATION, payload),
 
   /**
    * 写入一条日志记录。

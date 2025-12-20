@@ -12,10 +12,7 @@ import { join } from 'path';
 import rawDefaultConfig from './appConfig.json';
 import type { AppConfig, ReminderMessage } from '../shared';
 
-export type {
-  AppConfig,
-  ReminderMessage,
-};
+export type { AppConfig, ReminderMessage };
 
 // 以外部 JSON 作为默认配置，避免与磁盘默认值重复维护。
 const DEFAULT_CONFIG: AppConfig = rawDefaultConfig as AppConfig;

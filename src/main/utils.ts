@@ -26,10 +26,7 @@ export const resolveAssetPath = (...paths: string[]): string => {
  * @param now - The current timestamp.
  * @returns {number} The progress ratio (0-1), or 0 if invalid.
  */
-export function calculateWorkdayProgress(
-  workDayConfig: AppConfig['workDay'],
-  now: number
-): number {
+export function calculateWorkdayProgress(workDayConfig: AppConfig['workDay'], now: number): number {
   if (!workDayConfig) {
     return 0;
   }

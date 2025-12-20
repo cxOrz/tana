@@ -1,45 +1,77 @@
 <script lang="ts" setup>
-import type { CalendarRootEmits, CalendarRootProps, DateValue } from "reka-ui"
-import type { HTMLAttributes, Ref } from "vue"
-import type { LayoutTypes } from "."
-import { getLocalTimeZone, today } from "@internationalized/date"
-import { createReusableTemplate, reactiveOmit, useVModel } from "@vueuse/core"
-import { CalendarRoot, useDateFormatter, useForwardPropsEmits } from "reka-ui"
-import { createYear, createYearRange, toDate } from "reka-ui/date"
-import { computed, toRaw } from "vue"
-import { cn } from "@/lib/utils"
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
-import { CalendarCell, CalendarCellTrigger, CalendarGrid, CalendarGridBody, CalendarGridHead, CalendarGridRow, CalendarHeadCell, CalendarHeader, CalendarHeading, CalendarNextButton, CalendarPrevButton } from "."
+import type { CalendarRootEmits, CalendarRootProps, DateValue } from 'reka-ui';
+import type { HTMLAttributes, Ref } from 'vue';
+import type { LayoutTypes } from '.';
+import { getLocalTimeZone, today } from '@internationalized/date';
+import { createReusableTemplate, reactiveOmit, useVModel } from '@vueuse/core';
+import { CalendarRoot, useDateFormatter, useForwardPropsEmits } from 'reka-ui';
+import { createYear, createYearRange, toDate } from 'reka-ui/date';
+import { computed, toRaw } from 'vue';
+import { cn } from '@/lib/utils';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import {
+  CalendarCell,
+  CalendarCellTrigger,
+  CalendarGrid,
+  CalendarGridBody,
+  CalendarGridHead,
+  CalendarGridRow,
+  CalendarHeadCell,
+  CalendarHeader,
+  CalendarHeading,
+  CalendarNextButton,
+  CalendarPrevButton,
+} from '.';
 
-const props = withDefaults(defineProps<CalendarRootProps & { class?: HTMLAttributes["class"], layout?: LayoutTypes, yearRange?: DateValue[] }>(), {
-  modelValue: undefined,
-  layout: undefined,
-})
-const emits = defineEmits<CalendarRootEmits>()
+const props = withDefaults(
+  defineProps<
+    CalendarRootProps & {
+      class?: HTMLAttributes['class'];
+      layout?: LayoutTypes;
+      yearRange?: DateValue[];
+    }
+  >(),
+  {
+    modelValue: undefined,
+    layout: undefined,
+  }
+);
+const emits = defineEmits<CalendarRootEmits>();
 
-const delegatedProps = reactiveOmit(props, "class", "layout", "placeholder")
+const delegatedProps = reactiveOmit(props, 'class', 'layout', 'placeholder');
 
-const placeholder = useVModel(props, "placeholder", emits, {
+const placeholder = useVModel(props, 'placeholder', emits, {
   passive: true,
   defaultValue: props.defaultPlaceholder ?? today(getLocalTimeZone()),
-}) as Ref<DateValue>
+}) as Ref<DateValue>;
 
-const formatter = useDateFormatter(props.locale ?? "en")
+const formatter = useDateFormatter(props.locale ?? 'en');
 
 const yearRange = computed(() => {
-  return props.yearRange ?? createYearRange({
-    start: props?.minValue ?? (toRaw(props.placeholder) ?? props.defaultPlaceholder ?? today(getLocalTimeZone()))
-      .cycle("year", -100),
+  return (
+    props.yearRange ??
+    createYearRange({
+      start:
+        props?.minValue ??
+        (toRaw(props.placeholder) ?? props.defaultPlaceholder ?? today(getLocalTimeZone())).cycle(
+          'year',
+          -100
+        ),
 
-    end: props?.maxValue ?? (toRaw(props.placeholder) ?? props.defaultPlaceholder ?? today(getLocalTimeZone()))
-      .cycle("year", 10),
-  })
-})
+      end:
+        props?.maxValue ??
+        (toRaw(props.placeholder) ?? props.defaultPlaceholder ?? today(getLocalTimeZone())).cycle(
+          'year',
+          10
+        ),
+    })
+  );
+});
 
-const [DefineMonthTemplate, ReuseMonthTemplate] = createReusableTemplate<{ date: DateValue }>()
-const [DefineYearTemplate, ReuseYearTemplate] = createReusableTemplate<{ date: DateValue }>()
+const [DefineMonthTemplate, ReuseMonthTemplate] = createReusableTemplate<{ date: DateValue }>();
+const [DefineYearTemplate, ReuseYearTemplate] = createReusableTemplate<{ date: DateValue }>();
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits)
+const forwarded = useForwardPropsEmits(delegatedProps, emits);
 </script>
 
 <template>
@@ -51,13 +83,20 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
         </div>
         <NativeSelect
           class="text-xs h-8 pr-6 pl-2 text-transparent relative"
-          @change="(e: Event) => {
-            placeholder = placeholder.set({
-              month: Number((e?.target as any)?.value),
-            })
-          }"
+          @change="
+            (e: Event) => {
+              placeholder = placeholder.set({
+                month: Number((e?.target as any)?.value),
+              });
+            }
+          "
         >
-          <NativeSelectOption v-for="(month) in createYear({ dateObj: date })" :key="month.toString()" :value="month.month" :selected="date.month === month.month">
+          <NativeSelectOption
+            v-for="month in createYear({ dateObj: date })"
+            :key="month.toString()"
+            :value="month.month"
+            :selected="date.month === month.month"
+          >
             {{ formatter.custom(toDate(month), { month: 'short' }) }}
           </NativeSelectOption>
         </NativeSelect>
@@ -73,13 +112,20 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
         </div>
         <NativeSelect
           class="text-xs h-8 pr-6 pl-2 text-transparent relative"
-          @change="(e: Event) => {
-            placeholder = placeholder.set({
-              year: Number((e?.target as any)?.value),
-            })
-          }"
+          @change="
+            (e: Event) => {
+              placeholder = placeholder.set({
+                year: Number((e?.target as any)?.value),
+              });
+            }
+          "
         >
-          <NativeSelectOption v-for="(year) in yearRange" :key="year.toString()" :value="year.year" :selected="date.year === year.year">
+          <NativeSelectOption
+            v-for="year in yearRange"
+            :key="year.toString()"
+            :value="year.year"
+            :selected="date.year === year.year"
+          >
             {{ formatter.custom(toDate(year), { year: 'numeric' }) }}
           </NativeSelectOption>
         </NativeSelect>
@@ -104,7 +150,12 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
         </CalendarNextButton>
       </nav>
 
-      <slot name="calendar-heading" :date="date" :month="ReuseMonthTemplate" :year="ReuseYearTemplate">
+      <slot
+        name="calendar-heading"
+        :date="date"
+        :month="ReuseMonthTemplate"
+        :year="ReuseYearTemplate"
+      >
         <template v-if="layout === 'month-and-year'">
           <div class="flex items-center justify-center gap-1">
             <ReuseMonthTemplate :date="date" />
@@ -133,24 +184,19 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
       <CalendarGrid v-for="month in grid" :key="month.value.toString()">
         <CalendarGridHead>
           <CalendarGridRow>
-            <CalendarHeadCell
-              v-for="day in weekDays" :key="day"
-            >
+            <CalendarHeadCell v-for="day in weekDays" :key="day">
               {{ day }}
             </CalendarHeadCell>
           </CalendarGridRow>
         </CalendarGridHead>
         <CalendarGridBody>
-          <CalendarGridRow v-for="(weekDates, index) in month.rows" :key="`weekDate-${index}`" class="mt-2 w-full">
-            <CalendarCell
-              v-for="weekDate in weekDates"
-              :key="weekDate.toString()"
-              :date="weekDate"
-            >
-              <CalendarCellTrigger
-                :day="weekDate"
-                :month="month.value"
-              />
+          <CalendarGridRow
+            v-for="(weekDates, index) in month.rows"
+            :key="`weekDate-${index}`"
+            class="mt-2 w-full"
+          >
+            <CalendarCell v-for="weekDate in weekDates" :key="weekDate.toString()" :date="weekDate">
+              <CalendarCellTrigger :day="weekDate" :month="month.value" />
             </CalendarCell>
           </CalendarGridRow>
         </CalendarGridBody>

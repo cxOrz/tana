@@ -69,7 +69,10 @@ export async function appendJournalEntry(input: AddJournalEntryInput): Promise<J
 /**
  * 写入或更新日报摘要。
  */
-export async function setJournalSummary(dayStamp: string, summary: JournalSummary): Promise<JournalSummary> {
+export async function setJournalSummary(
+  dayStamp: string,
+  summary: JournalSummary
+): Promise<JournalSummary> {
   const day = await loadJournalDay(dayStamp);
   day.summary = { ...summary };
   await persistDay(day);

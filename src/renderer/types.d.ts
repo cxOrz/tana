@@ -1,5 +1,4 @@
 declare global {
-  import type { ReminderPayload } from '../shared';
   import type {
     AddJournalEntryInput,
     JournalEntry,
@@ -22,13 +21,6 @@ declare global {
      */
     electronAPI: {
       /**
-       * 注册一个用于接收提醒事件的回调。
-       * @param {(payload: ReminderPayload) => void} callback - 当收到提醒时调用的回调函数。
-       * @returns {() => void} 一个用于取消监听的函数。
-       */
-      onReminder: (callback: (payload: ReminderPayload) => void) => () => void;
-
-      /**
        * 注册一个在应用即将隐藏时触发的回调。
        * @param {() => void} callback - 回调函数。
        * @returns {() => void} 一个用于取消监听的函数。
@@ -46,13 +38,6 @@ declare global {
        * 通知主进程渲染器已经准备好隐藏。
        */
       notifyHideReady: () => void;
-
-      /**
-       * 请求主进程显示一个系统通知。
-       * @param {ReminderPayload} payload - 提醒的数据负载。
-       * @returns {Promise<void>}
-       */
-      notifySystem: (payload: ReminderPayload) => Promise<void>;
 
       /**
        * 写入一条日志记录。

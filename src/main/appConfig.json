@@ -1,16 +1,15 @@
 {
   "version": "1.0",
-  "locale": "zh-CN",
   "baseIntervalMinutes": 1,
   "workDay": {
     "startTime": "09:00",
     "endTime": "18:00"
   },
   "petWindow": {
-    "scale": 0.7
+    "scale": 0.6
   },
   "notifications": {
-    "systemEnabled": true,
+    "systemEnabled": true
   },
   "journal": {
     "dailyReportTime": "18:00",
@@ -24,26 +23,18 @@
   },
   "reminders": {
     "enabled": true,
-    "defaultIntervalMinutes": 30,
+    "defaultIntervalMinutes": 25,
     "messages": [
       {
         "id": "daily-1",
-        "text": "已经投入一阵子了，起来活动下，顺便记一条想法？"
+        "text": "已经投入一阵子了，起来活动下吧~"
       },
       {
         "id": "daily-2",
-        "text": "喝口水，舒展一下，保持好状态继续冲。"
+        "text": "再忙也要记得喝水！"
       },
       {
         "id": "daily-3",
-        "text": "今天的节奏不错，继续保持！"
-      },
-      {
-        "id": "daily-4",
-        "text": "记得看看身体状态，保持专注也要保持健康。"
-      },
-      {
-        "id": "daily-5",
         "type": "salary",
         "targetEarnSalary": 761,
         "text": "今天已为你赚了 {{ earnedMoney }} 元，继续加油！"

@@ -10,12 +10,6 @@ export const IPC_CHANNELS = {
   WILL_HIDE: 'app:will-hide',
   HIDE_ACK: 'app:hide-ack',
 
-  // Reminders
-  PUSH_REMINDER: 'reminder:push',
-
-  // Notifications
-  SHOW_SYSTEM_NOTIFICATION: 'notify:system',
-
   // Journal
   JOURNAL_ADD_ENTRY: 'journal:add-entry',
   JOURNAL_GET_DAY: 'journal:get-day',

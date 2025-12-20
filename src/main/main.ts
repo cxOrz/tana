@@ -16,7 +16,6 @@ import { registerIpcHandlers } from './ipcHandlers';
 import { resolveAssetPath } from './utils';
 import { JournalScheduler } from './services/journalScheduler';
 
-
 let isQuitting = false;
 let reminderScheduler: ReminderScheduler | null = null;
 let journalScheduler: JournalScheduler | null = null;
@@ -76,8 +75,6 @@ function ensureScheduler(): ReminderScheduler {
       }).catch((err) => {
         console.warn('[notify] Failed to show system notification', err);
       });
-
-      window.webContents.send(IPC_CHANNELS.PUSH_REMINDER, payload);
     });
   }
   return reminderScheduler;

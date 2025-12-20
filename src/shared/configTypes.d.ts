@@ -1,7 +1,6 @@
 // 应用配置相关类型，供主进程与渲染进程共享。
 export interface AppConfig {
   version: string; // 配置的版本号。
-  locale: string; // 语言环境，如 zh-CN。
   baseIntervalMinutes: number; // 调度器的基础轮询时间间隔（分钟）。
   reminders: ReminderModule; // 提醒模块的配置。
   ai?: AiConfig; // 全局 AI 能力的配置。
