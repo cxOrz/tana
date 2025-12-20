@@ -3,7 +3,7 @@ import { loadAppConfig } from '../config';
 import type { ReminderPayload } from '../../shared';
 import { resolveAssetPath } from '../utils';
 
-const DEFAULT_TITLE = '日常提醒';
+const DEFAULT_TITLE = 'Yoho~';
 
 /**
  * 根据应用配置决定是否显示一个系统通知。
