@@ -15,9 +15,9 @@ Tana 是一只史莱姆，陪你度过难熬的工作时光~
 
 ## 👾 实际效果
 
-![Image](https://github.com/user-attachments/assets/3962819a-7bf9-4e34-aba8-f8af490a816b)
+![Image](https://github.com/user-attachments/assets/e2c3294e-ded2-4e70-9163-048dd76438e4)
 
-![Image](https://github.com/user-attachments/assets/6e0778eb-f47c-4feb-8651-6d5498a89af2)
+![Image](https://github.com/user-attachments/assets/beadde4e-c99f-4712-8320-d8085140373c)
 
 ## 🚀 快速开发
 
