@@ -6,7 +6,7 @@
     "dev": "bun build:main && concurrently \"bun dev:vite\" \"bun dev:main\" \"bun dev:electron\"",
     "dev:vite": "bunx --bun vite",
     "dev:main": "tsc -p src/main/tsconfig.json --watch",
-    "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .",
+    "dev:electron": "cross-env NODE_ENV=development electron .",
     "build": "bun build:renderer && bun build:main",
     "build:renderer": "bunx --bun vite build",
     "build:main": "tsc -p src/main/tsconfig.json",

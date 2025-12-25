@@ -1,6 +1,6 @@
 import { app, Menu, Tray, nativeImage, ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../shared/constants';
-import { createMainWindow, getMainWindow } from './windowManager';
+import { createMainWindow, getMainWindow, openJournalReport } from './windowManager';
 import { resolveAssetPath } from './utils';
 
 let tray: Tray | null = null;
@@ -54,10 +54,18 @@ export function createTray(isQuitting: () => boolean): void {
     }
   };
 
+  const showJournalReport = () => {
+    openJournalReport();
+  };
+
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: '显示/隐藏窗口',
+      label: '显示/隐藏主窗口',
       click: toggleWindow,
+    },
+    {
+      label: '打开日志窗口',
+      click: showJournalReport,
     },
     { type: 'separator' },
     {

@@ -81,14 +81,6 @@ const electronAPI = {
     ipcRenderer.invoke(IPC_CHANNELS.JOURNAL_SET_SUMMARY, dayStamp, summary),
 
   /**
-   * 打开日报窗口。
-   * @param {string} [dayStamp] - 目标日期。
-   * @returns {Promise<void>}
-   */
-  openJournalReport: (dayStamp?: string): Promise<void> =>
-    ipcRenderer.invoke(IPC_CHANNELS.JOURNAL_OPEN_REPORT, dayStamp),
-
-  /**
    * 监听主进程发来的“打开日报”事件。
    * @param {(dayStamp?: string) => void} callback - 回调。
    * @returns {() => void} 取消监听函数。

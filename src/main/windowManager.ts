@@ -127,6 +127,15 @@ export function createJournalInputWindow(): BrowserWindow {
 }
 
 /**
+ * 打开日志输入窗口。
+ */
+export function openJournalInput(): void {
+  const win = createJournalInputWindow();
+  win.show();
+  win.focus();
+}
+
+/**
  * 创建日报窗口。
  */
 export function createJournalReportWindow(): BrowserWindow {
@@ -179,4 +188,21 @@ export function updateMainWindowSize(scale: number) {
   if (win && !win.isDestroyed()) {
     win.setContentSize(windowSize.width, windowSize.height);
   }
+}
+
+/**
+ * 打开日报窗口。
+ * @param {string} [dayStamp] - 指定日期，默认当天。
+ */
+export function openJournalReport(dayStamp?: string): void {
+  const win = createJournalReportWindow();
+
+  const sendDay = () => win.webContents.send(IPC_CHANNELS.JOURNAL_OPEN_REPORT, dayStamp);
+  if (win.webContents.isLoading()) {
+    win.webContents.once('did-finish-load', sendDay);
+  } else {
+    sendDay();
+  }
+  win.show();
+  win.focus();
 }

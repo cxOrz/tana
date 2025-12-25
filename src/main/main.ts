@@ -5,10 +5,10 @@ import type { AppConfig } from './config';
 import { ReminderScheduler } from './reminderScheduler';
 import { maybeShowSystemNotification } from './services/notifications';
 import {
-  createJournalInputWindow,
-  createJournalReportWindow,
   createMainWindow,
   getMainWindow,
+  openJournalInput,
+  openJournalReport,
   updateMainWindowSize,
 } from './windowManager';
 import { createTray } from './trayManager';
@@ -88,32 +88,6 @@ function ensureJournalScheduler(): JournalScheduler {
     journalScheduler = new JournalScheduler(() => openJournalReport());
   }
   return journalScheduler;
-}
-
-/**
- * 打开日志输入窗口。
- */
-function openJournalInput(): void {
-  const win = createJournalInputWindow();
-  win.show();
-  win.focus();
-}
-
-/**
- * 打开日报窗口。
- * @param {string} [dayStamp] - 指定日期，默认当天。
- */
-function openJournalReport(dayStamp?: string): void {
-  const win = createJournalReportWindow();
-
-  const sendDay = () => win.webContents.send(IPC_CHANNELS.JOURNAL_OPEN_REPORT, dayStamp);
-  if (win.webContents.isLoading()) {
-    win.webContents.once('did-finish-load', sendDay);
-  } else {
-    sendDay();
-  }
-  win.show();
-  win.focus();
 }
 
 /**
