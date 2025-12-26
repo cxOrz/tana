@@ -1,5 +1,6 @@
 {
   "name": "tana",
+  "productName": "Tana",
   "version": "1.0.0",
   "main": "dist/main/main.js",
   "scripts": {

@@ -16,7 +16,11 @@ import { registerIpcHandlers } from './ipcHandlers';
 import { resolveAssetPath } from './utils';
 import { JournalScheduler } from './services/journalScheduler';
 
-let isQuitting = false;
+if (process.platform === 'win32') {
+  app.setAppUserModelId(APP_USER_MODEL_ID);
+}
+
+let isQuit = false;
 let reminderScheduler: ReminderScheduler | null = null;
 let journalScheduler: JournalScheduler | null = null;
 let currentJournalHotkey: string | null = null;
@@ -119,7 +123,7 @@ function refreshJournalHotkey(config: AppConfig): void {
 // =============================================================================
 
 app.on('before-quit', () => {
-  isQuitting = true;
+  isQuit = true;
   reminderScheduler?.stop();
   journalScheduler?.stop();
   try {
@@ -128,7 +132,7 @@ app.on('before-quit', () => {
 });
 
 app.on('window-all-closed', () => {
-  if (isQuitting && process.platform !== 'darwin') {
+  if (isQuit && process.platform !== 'darwin') {
     app.quit();
   }
 });
@@ -139,9 +143,6 @@ app.whenReady().then(async () => {
     const dockIcon = nativeImage.createFromPath(resolveAssetPath('icons', 'logo.png'));
     app.dock.setIcon(dockIcon);
     app.dock.hide();
-  }
-  if (process.platform === 'win32') {
-    app.setAppUserModelId(APP_USER_MODEL_ID);
   }
 
   let loadedConfig: AppConfig | null = null;
@@ -168,8 +169,8 @@ app.whenReady().then(async () => {
   }
 
   // Initialize app components
-  createTray(() => isQuitting);
-  createMainWindow(() => isQuitting);
+  createTray(() => isQuit);
+  createMainWindow(() => isQuit);
   registerIpcHandlers();
 
   // Handle --open-journal-input flag on first launch
@@ -183,11 +184,9 @@ app.whenReady().then(async () => {
   }
 
   app.on('activate', () => {
-    const window = getMainWindow() ?? createMainWindow(() => isQuitting);
-    if (window) {
-      window.webContents.send(IPC_CHANNELS.WILL_SHOW);
-      window.show();
-      window.focus();
-    }
+    const window = createMainWindow(() => isQuit);
+    window.webContents.send(IPC_CHANNELS.WILL_SHOW);
+    window.show();
+    window.focus();
   });
 });

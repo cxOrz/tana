@@ -32,7 +32,7 @@ function loadRendererPage(window: BrowserWindow, route: '/' | '/journal' | '/jou
 /**
  * 创建主窗口 (宠物窗口)。
  */
-export function createMainWindow(isQuitting: () => boolean): BrowserWindow {
+export function createMainWindow(isQuit: () => boolean): BrowserWindow {
   if (mainWindow) {
     return mainWindow;
   }
@@ -63,7 +63,7 @@ export function createMainWindow(isQuitting: () => boolean): BrowserWindow {
 
   mainWindow.on('close', (event) => {
     // 阻止默认行为，不销毁，留在托盘
-    if (!isQuitting()) {
+    if (!isQuit()) {
       event.preventDefault();
     }
   });
@@ -116,7 +116,13 @@ export function createJournalInputWindow(): BrowserWindow {
     journalInputWindow = null;
   });
 
-  loadRendererPage(journalInputWindow, '/journal-input'); // 加载日志路由
+  // 拦截关闭，改为隐藏
+  journalInputWindow.on('close', (event) => {
+    event.preventDefault();
+    journalInputWindow?.hide();
+  });
+
+  loadRendererPage(journalInputWindow, '/journal-input');
 
   journalInputWindow.once('ready-to-show', () => {
     journalInputWindow?.show();
@@ -159,6 +165,11 @@ export function createJournalReportWindow(): BrowserWindow {
     journalReportWindow = null;
   });
 
+  journalReportWindow.on('close', (event) => {
+    event.preventDefault();
+    journalReportWindow?.hide();
+  });
+
   loadRendererPage(journalReportWindow, '/journal');
 
   journalReportWindow.once('ready-to-show', () => {
@@ -196,6 +207,10 @@ export function updateMainWindowSize(scale: number) {
  */
 export function openJournalReport(dayStamp?: string): void {
   const win = createJournalReportWindow();
+  if (!win.isFocused()) {
+    win.show();
+    win.focus();
+  }
 
   const sendDay = () => win.webContents.send(IPC_CHANNELS.JOURNAL_OPEN_REPORT, dayStamp);
   if (win.webContents.isLoading()) {
@@ -203,6 +218,4 @@ export function openJournalReport(dayStamp?: string): void {
   } else {
     sendDay();
   }
-  win.show();
-  win.focus();
 }

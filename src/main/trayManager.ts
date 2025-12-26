@@ -41,13 +41,15 @@ export function createTray(isQuitting: () => boolean): void {
       : resolveAssetPath('icons', 'logo.png');
   const icon = nativeImage.createFromPath(trayIconPath);
   tray = new Tray(icon);
-  tray.setToolTip('Tana is here');
+  tray.setToolTip('Tana');
 
   const toggleWindow = () => {
     const window = createMainWindow(isQuitting);
     if (window.isVisible()) {
+      // 渲染层渐出动画，然后隐藏窗口
       requestRendererExitThen(() => window.hide());
     } else {
+      // 渲染层渐进动画，然后显示窗口
       window.webContents.send(IPC_CHANNELS.WILL_SHOW);
       window.show();
       window.focus();
