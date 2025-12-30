@@ -49,11 +49,6 @@ onMounted(() => {
 </template>
 
 <style lang="css">
-html,
-body {
-  background-color: transparent;
-}
-
 /* 窗口淡入淡出过渡 */
 .app-shell {
   opacity: 1;

@@ -1,17 +1,14 @@
+import { Notification } from 'electron';
 import type { ReminderPayload, ReminderMessage, ReminderModule } from '../shared';
 import { AppConfig } from './config';
 import { calculateWorkdayProgress } from './utils';
+import { loadAppConfig } from './config';
+import { resolveAssetPath } from './utils';
 
 interface ModuleState {
   elapsedMinutes: number; // 距上次触发的分钟数
 }
 
-type SendReminderFn = (payload: ReminderPayload) => void;
-
-/**
- * 负责根据配置定时推送提醒的轻量调度器。
- * 所有模块共享统一的 tick 间隔，通过增量时间累计、冷却窗口等状态字段来决定是否触发。
- */
 export class ReminderScheduler {
   private timer: NodeJS.Timeout | null = null;
   private config: AppConfig | null = null;
@@ -19,7 +16,7 @@ export class ReminderScheduler {
   private lastTickAt = Date.now();
   private currentDayStamp = getDayStamp(new Date());
 
-  constructor(private readonly sendReminder: SendReminderFn) {}
+  constructor() {}
 
   /** 启动调度器并立即执行一次 tick */
   start(config: AppConfig): void {
@@ -68,11 +65,11 @@ export class ReminderScheduler {
   // 处理 reminder 的每个模块，如 daily
   private processModules(deltaMinutes: number, now: number): void {
     if (!this.config) return;
-    this.processModule(deltaMinutes, now);
+    void this.processModule(deltaMinutes, now);
   }
 
   // 处理一个模块
-  private processModule(deltaMinutes: number, now: number): void {
+  private async processModule(deltaMinutes: number, now: number): Promise<void> {
     if (!this.config) return;
 
     const moduleConfig = this.config.reminders;
@@ -91,7 +88,7 @@ export class ReminderScheduler {
     const context = this.buildContextForModule(now, message);
     const renderedText = interpolate(message.text, context);
 
-    this.sendReminder({
+    await sendNotification({
       messageId: message.id,
       text: renderedText,
       timestamp: now,
@@ -162,4 +159,24 @@ function getDayStamp(date: Date): number {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   return startOfDay.getTime();
+}
+
+/**
+ * 根据应用配置决定是否显示一个系统通知。
+ */
+export async function sendNotification(payload: ReminderPayload): Promise<void> {
+  const cfg = await loadAppConfig();
+  if (!cfg?.notifications?.systemEnabled) return;
+
+  const iconPath =
+    process.platform === 'win32'
+      ? resolveAssetPath('icons', 'logo.ico')
+      : resolveAssetPath('icons', 'logo.png');
+
+  const notif = new Notification({
+    title: 'Yoho~',
+    body: payload.text,
+    icon: iconPath,
+  });
+  notif.show();
 }

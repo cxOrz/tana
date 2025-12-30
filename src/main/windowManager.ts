@@ -9,12 +9,6 @@ let mainWindow: BrowserWindow | null = null; // 主窗口实例
 let journalInputWindow: BrowserWindow | null = null; // 速记窗口实例
 let journalReportWindow: BrowserWindow | null = null; // 日报窗口实例
 
-// 窗口大小
-let windowSize = {
-  width: PET_WINDOW_BASE_SIZE.WIDTH,
-  height: PET_WINDOW_BASE_SIZE.HEIGHT,
-};
-
 /**
  * 为指定的窗口加载渲染进程页面。
  */
@@ -32,10 +26,15 @@ function loadRendererPage(window: BrowserWindow, route: '/' | '/journal' | '/jou
 /**
  * 创建主窗口 (宠物窗口)。
  */
-export function createMainWindow(isQuit: () => boolean): BrowserWindow {
+export function createMainWindow(isQuit: () => boolean, scale: number = 1): BrowserWindow {
   if (mainWindow) {
     return mainWindow;
   }
+
+  const windowSize = {
+    width: Math.round(PET_WINDOW_BASE_SIZE.WIDTH * scale),
+    height: Math.round(PET_WINDOW_BASE_SIZE.HEIGHT * scale),
+  };
 
   const windowIcon =
     process.platform === 'win32'
@@ -156,6 +155,7 @@ export function createJournalReportWindow(): BrowserWindow {
     autoHideMenuBar: true,
     frame: true,
     show: false,
+    backgroundColor: '#020617',
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
     },
@@ -185,20 +185,6 @@ export function createJournalReportWindow(): BrowserWindow {
  */
 export function getMainWindow(): BrowserWindow | null {
   return mainWindow;
-}
-
-/**
- * 根据配置更新主窗口的尺寸。
- */
-export function updateMainWindowSize(scale: number) {
-  windowSize = {
-    width: Math.round(PET_WINDOW_BASE_SIZE.WIDTH * scale),
-    height: Math.round(PET_WINDOW_BASE_SIZE.HEIGHT * scale),
-  };
-  const win = getMainWindow();
-  if (win && !win.isDestroyed()) {
-    win.setContentSize(windowSize.width, windowSize.height);
-  }
 }
 
 /**
