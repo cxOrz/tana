@@ -1,13 +1,13 @@
 import { ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../shared/constants';
-import { loadAppConfig, readAppResource } from './config';
+import { loadAppConfig, readAppResource } from './services/config/config';
 import {
   appendJournalEntry,
   listJournalDays,
   loadJournalDay,
   setJournalSummary,
-} from './services/journalStore';
-import { createJournalReportWindow } from './windowManager';
+} from './services/journal/journalStore';
+import { createJournalReportWindow } from './windows/windowManager';
 
 // =============================================================================
 // Handler Registration

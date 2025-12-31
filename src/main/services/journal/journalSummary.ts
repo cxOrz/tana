@@ -1,7 +1,7 @@
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText } from 'ai';
-import type { AiConfig } from '../../shared/configTypes';
-import type { JournalDay, JournalSummary } from '../../shared';
+import type { AiConfig } from '../../../shared/configTypes';
+import type { JournalDay, JournalSummary } from '../../../shared';
 
 const DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
 

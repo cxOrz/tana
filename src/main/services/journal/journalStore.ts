@@ -2,7 +2,12 @@ import { app } from 'electron';
 import { randomUUID } from 'crypto';
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import type { AddJournalEntryInput, JournalDay, JournalEntry, JournalSummary } from '../../shared';
+import type {
+  AddJournalEntryInput,
+  JournalDay,
+  JournalEntry,
+  JournalSummary,
+} from '../../../shared';
 
 // =============================================================================
 // Constants

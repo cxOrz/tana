@@ -1,18 +1,18 @@
 import { app, nativeImage, globalShortcut } from 'electron';
 import { APP_USER_MODEL_ID, IPC_CHANNELS } from '../shared/constants';
-import { loadAppConfig } from './config';
-import type { AppConfig } from './config';
-import { ReminderScheduler } from './reminderScheduler';
+import { loadAppConfig } from './services/config/config';
+import type { AppConfig } from './services/config/config';
+import { ReminderScheduler } from './services/reminderScheduler';
 import {
   createMainWindow,
   getMainWindow,
   openJournalInput,
   openJournalReport,
-} from './windowManager';
-import { createTray } from './trayManager';
+} from './windows/windowManager';
+import { createTray } from './windows/trayManager';
 import { registerIpcHandlers } from './ipcHandlers';
-import { resolveAssetPath } from './utils';
-import { JournalScheduler } from './services/journalScheduler';
+import { resolveAssetPath } from './lib/utils';
+import { JournalScheduler } from './services/journal/journalScheduler';
 
 // =============================================================================
 // State

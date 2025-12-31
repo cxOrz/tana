@@ -45,6 +45,7 @@ onMounted(() => {
     :class="{ 'app-enter': isEntering, 'app-exit': isExiting }"
   >
     <div ref="pixiContainer" class="relative flex h-full w-full items-center justify-center" />
+    <div class="drag-strip" />
   </div>
 </template>
 
@@ -53,17 +54,23 @@ onMounted(() => {
 .app-shell {
   opacity: 1;
   transition: opacity 220ms ease;
-  -webkit-app-region: drag; /* 允许拖动窗口 */
   border-radius: 10px;
 }
+
 .app-enter {
   opacity: 0;
 }
+
 .app-exit {
   opacity: 0;
 }
 
-.no-drag {
-  -webkit-app-region: no-drag; /* 局部禁止拖动 */
+/* 仅底部 20px 区域可拖动 */
+.drag-strip {
+  position: absolute;
+  inset-inline: 0;
+  height: 35px;
+  bottom: 0;
+  -webkit-app-region: drag;
 }
 </style>

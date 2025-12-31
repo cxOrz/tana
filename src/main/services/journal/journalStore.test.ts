@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { loadJournalDay, appendJournalEntry, listJournalDays, getDayStamp } from './journalStore';
 import { promises as fs } from 'fs';
+import { loadJournalDay, appendJournalEntry, listJournalDays, getDayStamp } from './journalStore';
 
 // Mock electron
 vi.mock('electron', () => ({
@@ -102,7 +102,7 @@ describe('journalStore', () => {
         '.DS_Store',
       ];
       vi.mocked(fs.readdir).mockResolvedValue(
-        mockFiles as unknown as Awaited<ReturnType<typeof fs.readdir>>,
+        mockFiles as unknown as Awaited<ReturnType<typeof fs.readdir>>
       );
 
       const days = await listJournalDays();

@@ -1,9 +1,8 @@
 import { Notification } from 'electron';
-import type { ReminderPayload, ReminderMessage, ReminderModule } from '../shared';
-import { AppConfig } from './config';
-import { calculateWorkdayProgress } from './utils';
-import { loadAppConfig } from './config';
-import { resolveAssetPath } from './utils';
+import type { ReminderPayload, ReminderMessage, ReminderModule } from '../../shared';
+import { AppConfig } from './config/config';
+import { loadAppConfig } from './config/config';
+import { calculateWorkdayProgress, resolveAssetPath } from '../lib/utils';
 
 // =============================================================================
 // Interfaces

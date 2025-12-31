@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getAIJournalSummary } from './journalSummary';
 import { generateText } from 'ai';
-import type { JournalDay } from '../../shared';
+import type { JournalDay } from '../../../shared';
 
 // Mock 'ai' library
 vi.mock('ai', () => ({

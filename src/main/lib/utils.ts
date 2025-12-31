@@ -1,6 +1,6 @@
 import { app } from 'electron';
 import { join } from 'path';
-import type { AppConfig } from '../shared';
+import type { AppConfig } from '../../shared';
 
 /**
  * @file utils.ts

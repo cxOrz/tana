@@ -1,7 +1,8 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, screen, shell } from 'electron';
 import { join } from 'path';
-import { IPC_CHANNELS, PET_WINDOW_BASE_SIZE } from '../shared/constants';
-import { resolveAssetPath } from './utils';
+import { IPC_CHANNELS, PET_WINDOW_BASE_SIZE } from '../../shared/constants';
+import { resolveAssetPath } from '../lib/utils';
+import { loadRuntimeStateSync, saveMainWindowBounds } from '../services/stateStore';
 
 // =============================================================================
 // State & Constants
@@ -12,6 +13,55 @@ const DEV_SERVER_URL = 'http://localhost:5173/';
 let mainWindow: BrowserWindow | null = null; // 主窗口实例
 let journalInputWindow: BrowserWindow | null = null; // 速记窗口实例
 let journalReportWindow: BrowserWindow | null = null; // 日报窗口实例
+let saveBoundsTimer: NodeJS.Timeout | null = null;
+
+// =============================================================================
+// Bounds Helpers
+// =============================================================================
+
+const clamp = (value: number, min: number, max: number): number => {
+  if (Number.isNaN(value)) return min;
+  if (max < min) return min;
+  return Math.min(Math.max(value, min), max);
+};
+
+const resolveMainWindowPosition = (windowSize: {
+  width: number;
+  height: number;
+}): { x: number; y: number } | undefined => {
+  const saved = loadRuntimeStateSync().mainWindow;
+  if (!saved) return undefined;
+
+  const display = screen.getDisplayMatching({
+    x: saved.x,
+    y: saved.y,
+    width: saved.width,
+    height: saved.height,
+  });
+  const area = display.workArea;
+  const maxX = area.x + area.width - windowSize.width;
+  const maxY = area.y + area.height - windowSize.height;
+
+  return {
+    x: clamp(saved.x, area.x, maxX),
+    y: clamp(saved.y, area.y, maxY),
+  };
+};
+
+const scheduleSaveMainBounds = (): void => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (saveBoundsTimer) {
+    clearTimeout(saveBoundsTimer);
+  }
+  saveBoundsTimer = setTimeout(() => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    const { x, y, width, height } = mainWindow.getBounds();
+    saveMainWindowBounds({ x, y, width, height }).catch((error) => {
+      console.warn('[window] 保存窗口位置失败', error);
+    });
+    saveBoundsTimer = null;
+  }, 150);
+};
 
 // =============================================================================
 // Helpers
@@ -26,7 +76,7 @@ function loadRendererPage(window: BrowserWindow, route: '/' | '/journal' | '/jou
     return;
   }
 
-  const indexPath = join(__dirname, '../renderer/index.html');
+  const indexPath = join(__dirname, '../../renderer/index.html');
   const hashOption = route.slice(1);
   window.loadFile(indexPath, { hash: hashOption });
 }
@@ -48,6 +98,7 @@ export function createMainWindow(isQuit: () => boolean, scale: number = 1): Brow
     height: Math.round(PET_WINDOW_BASE_SIZE.HEIGHT * scale),
   };
 
+  const restoredPosition = resolveMainWindowPosition(windowSize);
   const windowIcon =
     process.platform === 'win32'
       ? resolveAssetPath('icons', 'logo.ico')
@@ -66,8 +117,10 @@ export function createMainWindow(isQuit: () => boolean, scale: number = 1): Brow
     skipTaskbar: true,
     alwaysOnTop: true,
     icon: windowIcon,
+    x: restoredPosition?.x,
+    y: restoredPosition?.y,
     webPreferences: {
-      preload: join(__dirname, 'preload.js'),
+      preload: join(__dirname, '../preload.js'),
       backgroundThrottling: false,
     },
   });
@@ -80,8 +133,14 @@ export function createMainWindow(isQuit: () => boolean, scale: number = 1): Brow
   });
 
   mainWindow.on('closed', () => {
+    if (saveBoundsTimer) {
+      clearTimeout(saveBoundsTimer);
+      saveBoundsTimer = null;
+    }
     mainWindow = null;
   });
+
+  mainWindow.on('move', scheduleSaveMainBounds);
 
   // 阻止弹出新窗口；用系统浏览器打开链接
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -123,7 +182,7 @@ export function createJournalInputWindow(): BrowserWindow {
     transparent: true,
     show: false,
     webPreferences: {
-      preload: join(__dirname, 'preload.js'),
+      preload: join(__dirname, '../preload.js'),
     },
   });
 
@@ -177,7 +236,7 @@ export function createJournalReportWindow(): BrowserWindow {
     show: false,
     backgroundColor: '#020617',
     webPreferences: {
-      preload: join(__dirname, 'preload.js'),
+      preload: join(__dirname, '../preload.js'),
     },
   });
 

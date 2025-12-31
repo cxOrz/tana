@@ -10,7 +10,7 @@ import { app } from 'electron';
 import { promises as fs } from 'fs';
 import { join, isAbsolute } from 'path';
 import rawDefaultConfig from './appConfig.json';
-import type { AppConfig, ReminderMessage } from '../shared';
+import type { AppConfig, ReminderMessage } from '../../../shared';
 
 export type { AppConfig, ReminderMessage };
 

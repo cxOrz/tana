@@ -1,10 +1,9 @@
 import { Notification } from 'electron';
-import type { JournalDay, JournalSummary } from '../../shared';
-import type { AppConfig } from '../config';
-import { loadJournalDay, setJournalSummary } from './journalStore';
-import { resolveAssetPath } from '../utils';
-import { getDayStamp } from './journalStore';
+import type { JournalDay, JournalSummary } from '../../../shared';
+import type { AppConfig } from '../config/config';
+import { resolveAssetPath } from '../../lib/utils';
 import { getAIJournalSummary } from './journalSummary';
+import { getDayStamp, loadJournalDay, setJournalSummary } from './journalStore';
 
 export class JournalScheduler {
   private timer: NodeJS.Timeout | null = null;
