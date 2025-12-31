@@ -7,7 +7,7 @@ import {
   loadJournalDay,
   setJournalSummary,
 } from './services/journal/journalStore';
-import { createJournalReportWindow } from './windows/windowManager';
+import { createJournalReportWindow } from './windows';
 
 // =============================================================================
 // Handler Registration

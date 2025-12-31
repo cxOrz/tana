@@ -6,7 +6,7 @@ import type { ForgeConfig } from '@electron-forge/shared-types';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    appBundleId: 'com.cxOrz.tana',
+    appBundleId: 'com.cxorz.tana',
     extraResource: ['assets'],
   },
   rebuildConfig: {},

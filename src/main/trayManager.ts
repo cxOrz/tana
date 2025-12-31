@@ -1,7 +1,7 @@
 import { app, Menu, Tray, nativeImage, ipcMain } from 'electron';
-import { IPC_CHANNELS } from '../../shared/constants';
-import { createMainWindow, getMainWindow, openJournalReport } from './windowManager';
-import { resolveAssetPath } from '../lib/utils';
+import { IPC_CHANNELS } from '../shared/constants';
+import { createMainWindow, getMainWindow, openJournalReport } from './windows';
+import { resolveAssetPath } from './lib/utils';
 
 let tray: Tray | null = null;
 

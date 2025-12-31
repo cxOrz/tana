@@ -16,7 +16,7 @@ import type { AppConfig } from '../../shared';
 export const resolveAssetPath = (...paths: string[]): string => {
   const assetsBase = app.isPackaged
     ? join(process.resourcesPath, 'assets')
-    : join(__dirname, '../../assets');
+    : join(__dirname, '../../../assets');
   return join(assetsBase, ...paths);
 };
 

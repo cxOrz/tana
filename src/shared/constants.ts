@@ -22,4 +22,4 @@ export const IPC_CHANNELS = {
   APP_READ_FILE: 'app:read-file',
 };
 
-export const APP_USER_MODEL_ID = 'com.cxOrz.tana'; // Windows 使用的用户模型 ID。
+export const APP_USER_MODEL_ID = 'com.cxorz.tana'; // Windows 使用的用户模型 ID。

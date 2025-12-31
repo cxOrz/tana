@@ -8,8 +8,8 @@ import {
   getMainWindow,
   openJournalInput,
   openJournalReport,
-} from './windows/windowManager';
-import { createTray } from './windows/trayManager';
+} from './windows';
+import { createTray } from './trayManager';
 import { registerIpcHandlers } from './ipcHandlers';
 import { resolveAssetPath } from './lib/utils';
 import { JournalScheduler } from './services/journal/journalScheduler';
