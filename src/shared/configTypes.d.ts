@@ -32,7 +32,8 @@ export interface ReminderMessage {
 }
 
 export interface MainWindowConfig {
-  scale: number; // 应用于基础窗口尺寸的缩放因子。
+  width?: number; // 窗口宽度
+  height?: number; // 窗口高度
   theme?: {
     custom: boolean;
     type: 'image' | 'spritesheet';

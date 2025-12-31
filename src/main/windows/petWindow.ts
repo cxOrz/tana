@@ -1,6 +1,6 @@
 import { BrowserWindow, screen, shell } from 'electron';
 import { join } from 'path';
-import { IPC_CHANNELS, PET_WINDOW_BASE_SIZE } from '../../shared/constants';
+import { IPC_CHANNELS } from '../../shared/constants';
 import { resolveAssetPath } from '../lib/utils';
 import { loadRuntimeStateSync, saveMainWindowBounds } from '../services/stateStore';
 import { loadRendererPage } from './shared';
@@ -52,12 +52,16 @@ const scheduleSaveMainBounds = (): void => {
 /**
  * 创建主窗口 (宠物窗口)。
  */
-export function createMainWindow(isQuit: () => boolean, scale: number = 1): BrowserWindow {
+export function createMainWindow(
+  isQuit: () => boolean,
+  options: { width?: number; height?: number } = {}
+): BrowserWindow {
   if (mainWindow) return mainWindow;
 
+  const { width, height } = options;
   const windowSize = {
-    width: Math.round(PET_WINDOW_BASE_SIZE.WIDTH * scale),
-    height: Math.round(PET_WINDOW_BASE_SIZE.HEIGHT * scale),
+    width: width || 450,
+    height: height || 360,
   };
 
   const restoredPosition = resolveMainWindowPosition(windowSize);

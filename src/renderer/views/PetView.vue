@@ -69,8 +69,8 @@ onMounted(() => {
 .drag-strip {
   position: absolute;
   inset-inline: 0;
-  height: 35px;
-  bottom: 0;
+  inset-block-start: 0;
+  inset-block-end: 0;
   -webkit-app-region: drag;
 }
 </style>

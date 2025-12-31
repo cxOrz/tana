@@ -1,8 +1,4 @@
 // 项目中的共享常量，集中管理可以减少魔法字符串与重复定义。
-export const PET_WINDOW_BASE_SIZE = {
-  WIDTH: 450,
-  HEIGHT: 360,
-};
 
 export const IPC_CHANNELS = {
   // App lifecycle

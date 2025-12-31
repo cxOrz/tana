@@ -1,0 +1,33 @@
+{"frames": {
+
+"PC _ Computer - Terraria - Bosses - Skeletron & Skeletron Prime-0.png":
+{
+	"frame": {"x":1,"y":345,"w":246,"h":306},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":246,"h":306},
+	"sourceSize": {"w":246,"h":306},
+	"anchor": {"x":0,"y":0}
+},
+"PC _ Computer - Terraria - Bosses - Skeletron & Skeletron Prime-1.png":
+{
+	"frame": {"x":1,"y":1,"w":246,"h":342},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":246,"h":342},
+	"sourceSize": {"w":246,"h":342},
+	"anchor": {"x":0,"y":0}
+}},
+"animations": {
+	"PC _ Computer - Terraria - Bosses - Skeletron & Skeletron Prime": ["PC _ Computer - Terraria - Bosses - Skeletron & Skeletron Prime-0.png","PC _ Computer - Terraria - Bosses - Skeletron & Skeletron Prime-1.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.1",
+	"image": "skeletron.png",
+	"format": "RGBA8888",
+	"size": {"w":248,"h":652},
+	"scale": "3",
+	"smartupdate": "$TexturePacker:SmartUpdate:5dce23b1359d7997a95d4c5c1a7ac028:bc236c9533cae824011d237d9409e57d:0fbce6eb6b5ecd2418d2af5da9167c89$"
+}
+}

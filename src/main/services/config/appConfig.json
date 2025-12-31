@@ -6,11 +6,12 @@
     "endTime": "18:00"
   },
   "mainWindow": {
-    "scale": 0.6,
+    "width": 450,
+    "height": 360,
     "theme": {
       "custom": false,
       "type": "spritesheet",
-      "path": "skins/my-pet/pet.json"
+      "path": "my-pet/pet.json"
     }
   },
   "notifications": {

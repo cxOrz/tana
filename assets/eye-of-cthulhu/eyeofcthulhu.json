@@ -1,0 +1,39 @@
+{"frames": {
+
+"PC _ Computer - Terraria - Bosses - Eye of Cthulhu & The Twins-0.png":
+{
+	"frame": {"x":1,"y":645,"w":220,"h":304},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":220,"h":304},
+	"sourceSize": {"w":220,"h":304}
+},
+"PC _ Computer - Terraria - Bosses - Eye of Cthulhu & The Twins-1.png":
+{
+	"frame": {"x":1,"y":327,"w":220,"h":316},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":220,"h":316},
+	"sourceSize": {"w":220,"h":316}
+},
+"PC _ Computer - Terraria - Bosses - Eye of Cthulhu & The Twins-2.png":
+{
+	"frame": {"x":1,"y":1,"w":220,"h":324},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":220,"h":324},
+	"sourceSize": {"w":220,"h":324}
+}},
+"animations": {
+	"PC _ Computer - Terraria - Bosses - Eye of Cthulhu & The Twins": ["PC _ Computer - Terraria - Bosses - Eye of Cthulhu & The Twins-0.png","PC _ Computer - Terraria - Bosses - Eye of Cthulhu & The Twins-1.png","PC _ Computer - Terraria - Bosses - Eye of Cthulhu & The Twins-2.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.1",
+	"image": "eyeofcthulhu.png",
+	"format": "RGBA8888",
+	"size": {"w":222,"h":950},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:1ede6b962c4b3ed820cd6ad157ecfd3e:e37628343ab7b2f8e2fd28cbe065a9a0:20497721f60fd1e8126956d7dcfa0765$"
+}
+}

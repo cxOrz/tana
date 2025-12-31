@@ -38,7 +38,10 @@ function requestRendererExitThen(action: () => void) {
 /**
  * 创建系统托盘图标。
  */
-export function createTray(isQuitting: () => boolean): void {
+export function createTray(
+  isQuitting: () => boolean,
+  windowOpts: { width?: number; height?: number } = {}
+): void {
   if (tray) {
     return;
   }
@@ -52,7 +55,7 @@ export function createTray(isQuitting: () => boolean): void {
   tray.setToolTip('Tana');
 
   const toggleWindow = () => {
-    const window = createMainWindow(isQuitting);
+    const window = createMainWindow(isQuitting, windowOpts);
     if (window.isVisible()) {
       // 渲染层渐出动画，然后隐藏窗口
       requestRendererExitThen(() => window.hide());

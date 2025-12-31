@@ -22,6 +22,7 @@ let isQuit = false;
 let reminderScheduler: ReminderScheduler | null = null;
 let journalScheduler: JournalScheduler | null = null;
 let currentJournalHotkey: string | null = null;
+let savedWindowOpts: { width?: number; height?: number } = {};
 
 // =============================================================================
 // App Setup & Lifecycle Handlers
@@ -65,15 +66,16 @@ async function onAppReady() {
   }
 
   // 2. 加载配置
-  const { config, scale } = await loadConfigAndScale();
+  const { config, windowOpts } = await loadConfigAndWindowOpts();
+  savedWindowOpts = windowOpts;
 
   // 3. 启动后台服务 (IPC, 调度器, 快捷键)
   registerIpcHandlers();
   startBackgroundServices(config);
 
   // 4. 初始化 UI (托盘, 窗口)
-  createTray(() => isQuit);
-  createMainWindow(() => isQuit, scale);
+  createTray(() => isQuit, savedWindowOpts);
+  createMainWindow(() => isQuit, savedWindowOpts);
 
   // 5. 处理启动参数 (CLI Flags)
   handleLaunchArgs();
@@ -106,7 +108,7 @@ function onWindowAllClosed() {
 }
 
 function onActivate() {
-  const window = createMainWindow(() => isQuit);
+  const window = createMainWindow(() => isQuit, savedWindowOpts);
   window.webContents.send(IPC_CHANNELS.WILL_SHOW);
   window.show();
   window.focus();
@@ -116,18 +118,23 @@ function onActivate() {
 // Boot Helpers
 // =============================================================================
 
-async function loadConfigAndScale() {
+async function loadConfigAndWindowOpts() {
   let config: AppConfig | null = null;
-  let scale = 1;
+  const windowOpts: { width?: number; height?: number } = {};
   try {
     config = await loadAppConfig();
-    if (config.mainWindow?.scale && typeof config.mainWindow.scale === 'number') {
-      scale = Math.max(0.5, Math.min(2, config.mainWindow.scale));
+    if (config.mainWindow) {
+      if (typeof config.mainWindow.width === 'number') {
+        windowOpts.width = config.mainWindow.width;
+      }
+      if (typeof config.mainWindow.height === 'number') {
+        windowOpts.height = config.mainWindow.height;
+      }
     }
   } catch (error) {
     console.error('[main] 加载配置失败，使用默认窗口尺寸', error);
   }
-  return { config, scale };
+  return { config, windowOpts };
 }
 
 function startBackgroundServices(config: AppConfig | null) {
