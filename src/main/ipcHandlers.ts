@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../shared/constants';
+import { loadAppConfig, readAppResource } from './config';
 import {
   appendJournalEntry,
   listJournalDays,
@@ -8,10 +9,22 @@ import {
 } from './services/journalStore';
 import { createJournalReportWindow } from './windowManager';
 
+// =============================================================================
+// Handler Registration
+// =============================================================================
+
 /**
  * 注册所有的 IPC 事件处理程序。
  */
 export function registerIpcHandlers(): void {
+  ipcMain.handle(IPC_CHANNELS.APP_GET_CONFIG, async () => {
+    return loadAppConfig();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.APP_READ_FILE, async (_event, filePath: string) => {
+    return readAppResource(filePath);
+  });
+
   ipcMain.handle(IPC_CHANNELS.JOURNAL_ADD_ENTRY, async (_event, input) => {
     return appendJournalEntry(input);
   });
@@ -39,6 +52,10 @@ export function registerIpcHandlers(): void {
     }
   });
 }
+
+// =============================================================================
+// Helpers
+// =============================================================================
 
 function getTodayStamp(): string {
   const now = new Date();

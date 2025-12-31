@@ -14,122 +14,150 @@ import { registerIpcHandlers } from './ipcHandlers';
 import { resolveAssetPath } from './utils';
 import { JournalScheduler } from './services/journalScheduler';
 
-if (process.platform === 'win32') {
-  app.setAppUserModelId(APP_USER_MODEL_ID);
-  app.commandLine.appendSwitch('wm-window-animations-disabled');
-}
+// =============================================================================
+// State
+// =============================================================================
 
 let isQuit = false;
 let reminderScheduler: ReminderScheduler | null = null;
 let journalScheduler: JournalScheduler | null = null;
 let currentJournalHotkey: string | null = null;
 
-// Single instance lock
-const gotTheLock = app.requestSingleInstanceLock();
+// =============================================================================
+// App Setup & Lifecycle Handlers
+// =============================================================================
 
-if (!gotTheLock) {
-  app.quit();
-} else {
-  app.on('second-instance', (_event, commandLine) => {
-    // Someone tried to run a second instance, we should focus our window.
-    const mainWindow = getMainWindow();
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
+/**
+ * 应用程序启动入口。
+ */
+function initializeApp() {
+  if (process.platform === 'win32') {
+    app.setAppUserModelId(APP_USER_MODEL_ID);
+    app.commandLine.appendSwitch('wm-window-animations-disabled');
+  }
 
-    // Handle --open-journal-input flag for second instance
-    if (commandLine.includes('--open-journal-input')) {
-      openJournalInput();
-    }
+  // 单例锁检查
+  const gotTheLock = app.requestSingleInstanceLock();
+  if (!gotTheLock) {
+    app.quit();
+    return;
+  }
 
-    // Handle --open-journal-report flag for second instance
-    if (commandLine.includes('--open-journal-report')) {
-      openJournalReport();
-    }
-  });
+  // 事件监听
+  app.on('second-instance', onSecondInstance);
+  app.on('before-quit', onBeforeQuit);
+  app.on('window-all-closed', onWindowAllClosed);
+  app.on('activate', onActivate);
+  
+  // 核心启动逻辑
+  app.whenReady().then(onAppReady);
 }
 
-// =============================================================================
-// Events Register
-// =============================================================================
-
-app.on('before-quit', () => {
-  isQuit = true;
-  reminderScheduler?.stop();
-  journalScheduler?.stop();
-  try {
-    globalShortcut.unregisterAll();
-  } catch {}
-});
-
-app.on('window-all-closed', () => {
-  if (isQuit && process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app.whenReady().then(async () => {
-  // macOS
+/**
+ * App Ready 回调：负责初始化所有服务和窗口。
+ */
+async function onAppReady() {
+  // 1. 系统级设置 (Dock 等)
   if (process.platform === 'darwin' && app.dock) {
     const dockIcon = nativeImage.createFromPath(resolveAssetPath('icons', 'logo.png'));
     app.dock.setIcon(dockIcon);
     app.dock.hide();
   }
 
-  let loadedConfig: AppConfig | null = null;
-  let petScale = 1;
+  // 2. 加载配置
+  const { config, scale } = await loadConfigAndScale();
+
+  // 3. 启动后台服务 (IPC, 调度器, 快捷键)
+  registerIpcHandlers();
+  startBackgroundServices(config);
+
+  // 4. 初始化 UI (托盘, 窗口)
+  createTray(() => isQuit);
+  createMainWindow(() => isQuit, scale);
+
+  // 5. 处理启动参数 (CLI Flags)
+  handleLaunchArgs();
+}
+
+function onSecondInstance(_event: Electron.Event, commandLine: string[]) {
+  // 唤起主窗口
+  const mainWindow = getMainWindow();
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+  // 处理 CLI 参数
+  handleLaunchArgs(commandLine);
+}
+
+function onBeforeQuit() {
+  isQuit = true;
+  reminderScheduler?.stop();
+  journalScheduler?.stop();
   try {
-    loadedConfig = await loadAppConfig();
-    if (loadedConfig.petWindow?.scale && typeof loadedConfig.petWindow.scale === 'number') {
-      petScale = Math.max(0.5, Math.min(2, loadedConfig.petWindow.scale)); // 缩放限制在 0.5 - 2 之间
+    globalShortcut.unregisterAll();
+  } catch {}
+}
+
+function onWindowAllClosed() {
+  if (isQuit && process.platform !== 'darwin') {
+    app.quit();
+  }
+}
+
+function onActivate() {
+  const window = createMainWindow(() => isQuit);
+  window.webContents.send(IPC_CHANNELS.WILL_SHOW);
+  window.show();
+  window.focus();
+}
+
+// =============================================================================
+// Boot Helpers
+// =============================================================================
+
+async function loadConfigAndScale() {
+  let config: AppConfig | null = null;
+  let scale = 1;
+  try {
+    config = await loadAppConfig();
+    if (config.mainWindow?.scale && typeof config.mainWindow.scale === 'number') {
+      scale = Math.max(0.5, Math.min(2, config.mainWindow.scale));
     }
   } catch (error) {
     console.error('[main] 加载配置失败，使用默认窗口尺寸', error);
   }
+  return { config, scale };
+}
 
+function startBackgroundServices(config: AppConfig | null) {
   const scheduler = ensureReminderScheduler();
   const journal = ensureJournalScheduler();
-  if (loadedConfig) {
+
+  if (config) {
     try {
-      scheduler.start(loadedConfig); // 启动消息调度器
-      journal.start(loadedConfig); // 启动日志调度器
-      registerHotkey(loadedConfig); // 注册快捷键
+      scheduler.start(config);
+      journal.start(config);
+      registerHotkey(config);
     } catch (error) {
       console.warn('[main] 启动调度器失败', error);
     }
   }
+}
 
-  // Initialize app components
-  createTray(() => isQuit);
-  createMainWindow(() => isQuit, petScale);
-  registerIpcHandlers();
-
-  // Handle --open-journal-input flag on first launch
-  if (process.argv.includes('--open-journal-input')) {
+function handleLaunchArgs(argv: string[] = process.argv) {
+  if (argv.includes('--open-journal-input')) {
     openJournalInput();
   }
-
-  // Handle --open-journal-report flag on first launch
-  if (process.argv.includes('--open-journal-report')) {
+  if (argv.includes('--open-journal-report')) {
     openJournalReport();
   }
-
-  app.on('activate', () => {
-    const window = createMainWindow(() => isQuit);
-    window.webContents.send(IPC_CHANNELS.WILL_SHOW);
-    window.show();
-    window.focus();
-  });
-});
+}
 
 // =============================================================================
-// Function Definition
+// Service Management
 // =============================================================================
 
-/**
- * 获取或创建唯一的 ReminderScheduler 实例。
- */
 function ensureReminderScheduler(): ReminderScheduler {
   if (!reminderScheduler) {
     reminderScheduler = new ReminderScheduler();
@@ -137,9 +165,6 @@ function ensureReminderScheduler(): ReminderScheduler {
   return reminderScheduler;
 }
 
-/**
- * 获取或创建 JournalScheduler 实例。
- */
 function ensureJournalScheduler(): JournalScheduler {
   if (!journalScheduler) {
     journalScheduler = new JournalScheduler(() => openJournalReport());
@@ -147,10 +172,6 @@ function ensureJournalScheduler(): JournalScheduler {
   return journalScheduler;
 }
 
-/**
- * 刷新日志快捷键注册。
- * @param {AppConfig} config - 应用配置。
- */
 function registerHotkey(config: AppConfig): void {
   const hotkey = config.journal?.hotkey;
   if (currentJournalHotkey) {
@@ -170,3 +191,9 @@ function registerHotkey(config: AppConfig): void {
     }
   }
 }
+
+// =============================================================================
+// Execution
+// =============================================================================
+
+initializeApp();

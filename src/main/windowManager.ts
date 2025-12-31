@@ -3,11 +3,19 @@ import { join } from 'path';
 import { IPC_CHANNELS, PET_WINDOW_BASE_SIZE } from '../shared/constants';
 import { resolveAssetPath } from './utils';
 
+// =============================================================================
+// State & Constants
+// =============================================================================
+
 const DEV_SERVER_URL = 'http://localhost:5173/';
 
 let mainWindow: BrowserWindow | null = null; // 主窗口实例
 let journalInputWindow: BrowserWindow | null = null; // 速记窗口实例
 let journalReportWindow: BrowserWindow | null = null; // 日报窗口实例
+
+// =============================================================================
+// Helpers
+// =============================================================================
 
 /**
  * 为指定的窗口加载渲染进程页面。
@@ -22,6 +30,10 @@ function loadRendererPage(window: BrowserWindow, route: '/' | '/journal' | '/jou
   const hashOption = route.slice(1);
   window.loadFile(indexPath, { hash: hashOption });
 }
+
+// =============================================================================
+// Main Window (Pet)
+// =============================================================================
 
 /**
  * 创建主窗口 (宠物窗口)。
@@ -88,6 +100,10 @@ export function createMainWindow(isQuit: () => boolean, scale: number = 1): Brow
   return mainWindow;
 }
 
+// =============================================================================
+// Journal Input Window
+// =============================================================================
+
 /**
  * 创建快速输入窗口。
  */
@@ -140,6 +156,10 @@ export function openJournalInput(): void {
   win.focus();
 }
 
+// =============================================================================
+// Journal Report Window
+// =============================================================================
+
 /**
  * 创建日报窗口。
  */
@@ -181,13 +201,6 @@ export function createJournalReportWindow(): BrowserWindow {
 }
 
 /**
- * 获取主窗口实例。
- */
-export function getMainWindow(): BrowserWindow | null {
-  return mainWindow;
-}
-
-/**
  * 打开日报窗口。
  * @param {string} [dayStamp] - 指定日期，默认当天。
  */
@@ -204,4 +217,15 @@ export function openJournalReport(dayStamp?: string): void {
   } else {
     sendDay();
   }
+}
+
+// =============================================================================
+// Public Accessors
+// =============================================================================
+
+/**
+ * 获取主窗口实例。
+ */
+export function getMainWindow(): BrowserWindow | null {
+  return mainWindow;
 }

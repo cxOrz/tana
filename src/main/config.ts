@@ -8,17 +8,25 @@
 
 import { app } from 'electron';
 import { promises as fs } from 'fs';
-import { join } from 'path';
+import { join, isAbsolute } from 'path';
 import rawDefaultConfig from './appConfig.json';
 import type { AppConfig, ReminderMessage } from '../shared';
 
 export type { AppConfig, ReminderMessage };
+
+// =============================================================================
+// Constants & Types
+// =============================================================================
 
 // 以外部 JSON 作为默认配置，避免与磁盘默认值重复维护。
 const DEFAULT_CONFIG: AppConfig = rawDefaultConfig as AppConfig;
 
 const CONFIG_ROOT_DIR = '.tana';
 const CONFIG_FILE_NAME = 'config.json';
+
+// =============================================================================
+// Path Resolution
+// =============================================================================
 
 /**
  * 解析配置目录的路径（`.tana`），统一放置在用户主目录下的隐藏文件夹。
@@ -33,6 +41,44 @@ const resolveConfigDir = (): string => {
 export const resolveConfigPath = (): string => {
   return join(resolveConfigDir(), CONFIG_FILE_NAME);
 };
+
+// =============================================================================
+// Core Operations
+// =============================================================================
+
+/**
+ * 安全读取配置目录下的资源文件。
+ * @param relativePath 相对于配置目录的路径
+ * @returns Base64 编码的文件内容
+ * @throws Error 如果读取失败或路径非法
+ */
+export async function readAppResource(relativePath: string): Promise<string | null> {
+  if (!relativePath) return null;
+
+  // 安全检查：拒绝绝对路径
+  if (isAbsolute(relativePath)) {
+    console.warn(`[config] Access denied: Absolute path not allowed: ${relativePath}`);
+    return null;
+  }
+
+  const baseDir = resolveConfigDir();
+  // 确保路径解析安全，防止 ../ 逃逸 (path.join 会自动 normalize)
+  const targetPath = join(baseDir, relativePath);
+
+  // 安全检查：防止路径逃逸
+  if (!targetPath.startsWith(baseDir)) {
+    console.warn(`[config] Access denied: ${relativePath} is outside configuration directory.`);
+    return null;
+  }
+
+  try {
+    const buffer = await fs.readFile(targetPath);
+    return buffer.toString('base64');
+  } catch (error) {
+    console.error(`[config] Failed to read resource: ${relativePath}`, error);
+    throw error;
+  }
+}
 
 /**
  * 确保应用配置目录存在，如果不存在则创建。

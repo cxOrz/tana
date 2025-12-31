@@ -1,18 +1,19 @@
+import type {
+  AddJournalEntryInput,
+  JournalEntry,
+  JournalDay,
+  JournalSummary,
+} from '../shared/journalTypes';
+import type { AppConfig } from '../shared/configTypes';
+
+/**
+ * @file types.d.ts
+ * @description
+ * 全局类型声明文件。
+ * 用于扩展 `window` 对象和定义模块类型。
+ */
+
 declare global {
-  import type {
-    AddJournalEntryInput,
-    JournalEntry,
-    JournalDay,
-    JournalSummary,
-  } from '../shared/journalTypes';
-
-  /**
-   * @file types.d.ts
-   * @description
-   * 全局类型声明文件。
-   * 用于扩展 `window` 对象和定义模块类型。
-   */
-
   interface Window {
     /**
      * @property {object} electronAPI
@@ -20,6 +21,19 @@ declare global {
      * 这是与主进程安全通信的接口。
      */
     electronAPI: {
+      /**
+       * 获取应用配置。
+       * @returns {Promise<AppConfig>}
+       */
+      getAppConfig: () => Promise<AppConfig>;
+
+      /**
+       * 读取资源。
+       * @param {string} path
+       * @returns {Promise<string>}
+       */
+      readResource: (path: string) => Promise<string>;
+
       /**
        * 注册一个在应用即将隐藏时触发的回调。
        * @param {() => void} callback - 回调函数。

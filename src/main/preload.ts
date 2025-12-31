@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { AddJournalEntryInput, JournalDay, JournalSummary } from '../shared/journalTypes';
+import type { AppConfig } from '../shared/configTypes';
 
 // 由于开启 sandbox 后 preload 无法访问相对模块，这里内联 IPC 渠道常量。
 const IPC_CHANNELS = {
@@ -11,6 +12,8 @@ const IPC_CHANNELS = {
   JOURNAL_LIST_DAYS: 'journal:list-days',
   JOURNAL_SET_SUMMARY: 'journal:set-summary',
   JOURNAL_OPEN_REPORT: 'journal:open-report',
+  APP_GET_CONFIG: 'app:get-config',
+  APP_READ_FILE: 'app:read-file',
 } as const;
 
 /**
@@ -19,6 +22,19 @@ const IPC_CHANNELS = {
  * @type {ElectronAPI}
  */
 const electronAPI = {
+  /**
+   * 获取应用配置。
+   * @returns {Promise<AppConfig>}
+   */
+  getAppConfig: (): Promise<AppConfig> => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_CONFIG),
+
+  /**
+   * 读取本地资源文件为 Base64 字符串。
+   * @param {string} path - 文件路径。
+   * @returns {Promise<string>} Base64 字符串。
+   */
+  readResource: (path: string): Promise<string> => ipcRenderer.invoke(IPC_CHANNELS.APP_READ_FILE, path),
+
   /**
    * 注册一个在应用即将隐藏时触发的回调。
    * @param {() => void} callback - 回调函数。

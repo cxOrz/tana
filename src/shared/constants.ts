@@ -16,6 +16,10 @@ export const IPC_CHANNELS = {
   JOURNAL_LIST_DAYS: 'journal:list-days',
   JOURNAL_SET_SUMMARY: 'journal:set-summary',
   JOURNAL_OPEN_REPORT: 'journal:open-report',
+
+  // Config & Resources
+  APP_GET_CONFIG: 'app:get-config',
+  APP_READ_FILE: 'app:read-file',
 };
 
 export const APP_USER_MODEL_ID = 'com.cxOrz.tana'; // Windows 使用的用户模型 ID。

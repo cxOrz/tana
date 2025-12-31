@@ -4,7 +4,7 @@ export interface AppConfig {
   baseIntervalMinutes: number; // 调度器的基础轮询时间间隔（分钟）。
   reminders: ReminderModule; // 提醒模块的配置。
   ai?: AiConfig; // 全局 AI 能力的配置。
-  petWindow?: PetWindowConfig; // 宠物窗口的配置。
+  mainWindow?: MainWindowConfig; // 宠物窗口的配置。
   notifications?: NotificationConfig; // 系统通知的配置。
   journal?: JournalConfig; // 日志/记忆功能的配置。
   workDay?: {
@@ -31,8 +31,13 @@ export interface ReminderMessage {
   }; // 与消息关联的媒体资源。
 }
 
-export interface PetWindowConfig {
+export interface MainWindowConfig {
   scale: number; // 应用于基础窗口尺寸的缩放因子。
+  theme?: {
+    custom: boolean;
+    type: 'image' | 'spritesheet';
+    path: string;
+  };
 }
 
 export interface NotificationConfig {

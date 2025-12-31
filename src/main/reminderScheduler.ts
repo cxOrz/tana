@@ -5,6 +5,10 @@ import { calculateWorkdayProgress } from './utils';
 import { loadAppConfig } from './config';
 import { resolveAssetPath } from './utils';
 
+// =============================================================================
+// Interfaces
+// =============================================================================
+
 interface ModuleState {
   elapsedMinutes: number; // 距上次触发的分钟数
 }
@@ -17,6 +21,10 @@ export class ReminderScheduler {
   private currentDayStamp = getDayStamp(new Date());
 
   constructor() {}
+
+  // ===========================================================================
+  // Lifecycle
+  // ===========================================================================
 
   /** 启动调度器并立即执行一次 tick */
   start(config: AppConfig): void {
@@ -41,6 +49,10 @@ export class ReminderScheduler {
       this.timer = null;
     }
   }
+
+  // ===========================================================================
+  // Core Logic
+  // ===========================================================================
 
   private tick(): void {
     if (!this.config) return;
@@ -98,6 +110,10 @@ export class ReminderScheduler {
     state.elapsedMinutes = 0;
   }
 
+  // ===========================================================================
+  // State Management
+  // ===========================================================================
+
   // 获取模块当前状态
   private getModuleState(): ModuleState {
     if (!this.moduleState) {
@@ -138,6 +154,10 @@ export class ReminderScheduler {
     return { elapsedMinutes: 0 };
   }
 }
+
+// =============================================================================
+// Private Helpers
+// =============================================================================
 
 // 填充消息占位符
 function interpolate(template: string, context: Record<string, unknown>): string {

@@ -25,7 +25,7 @@
   - Scheduling: `src/main/reminderScheduler.ts` manages reminders and daily journal delivery.
   - Windows/Tray: `src/main/windowManager.ts` and `src/main/trayManager.ts`.
   - UI: Components live in `src/renderer/components`; composables in `src/renderer/hooks`.
-- **Code quality**: Run `npm run lint` and `npm run format` before committing when possible.
+- **Code quality**: Run `bun run lint`, `bun run format`, and `bun run typecheck` before committing when possible.
 
 ## Workflow Expectations
 
@@ -36,7 +36,7 @@
 
 ## Testing & Validation
 
-- Preferred checks: `npm run lint`, `npm run format`.
-- For packaging, run `npm run build` then `npm run make` when needed.
+- Preferred checks: `bun run lint`, `bun run format`, `bun run typecheck`.
+- For packaging, run `bun run build` then `bun run make` when needed.
 
 Following these conventions keeps main, renderer, and shared layers aligned and reduces regressions across the app.

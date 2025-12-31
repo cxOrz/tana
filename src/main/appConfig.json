@@ -5,8 +5,13 @@
     "startTime": "09:00",
     "endTime": "18:00"
   },
-  "petWindow": {
-    "scale": 0.6
+  "mainWindow": {
+    "scale": 0.6,
+    "theme": {
+      "custom": false,
+      "type": "spritesheet",
+      "path": "skins/my-pet/pet.json"
+    }
   },
   "notifications": {
     "systemEnabled": true

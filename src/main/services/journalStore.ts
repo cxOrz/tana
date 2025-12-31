@@ -4,25 +4,17 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import type { AddJournalEntryInput, JournalDay, JournalEntry, JournalSummary } from '../../shared';
 
+// =============================================================================
+// Constants
+// =============================================================================
+
 const JOURNAL_DIR = 'journal';
 const FILE_PREFIX = 'journal-';
 const FILE_EXT = '.json';
 
-/**
- * 解析日期戳的文件路径。
- */
-export function resolveJournalPath(dayStamp: string): string {
-  return join(app.getPath('userData'), JOURNAL_DIR, `${FILE_PREFIX}${dayStamp}${FILE_EXT}`);
-}
-
-/**
- * 确保日志目录存在。
- */
-async function ensureJournalDir(): Promise<string> {
-  const dir = join(app.getPath('userData'), JOURNAL_DIR);
-  await fs.mkdir(dir, { recursive: true });
-  return dir;
-}
+// =============================================================================
+// Public API
+// =============================================================================
 
 /**
  * 加载某一天的日志文件，若不存在则返回空结构。
@@ -94,17 +86,37 @@ export async function listJournalDays(limit?: number): Promise<string[]> {
 }
 
 /**
+ * 生成日期戳，格式 YYYY-MM-DD。
+ */
+export function getDayStamp(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+}
+
+/**
+ * 解析日期戳的文件路径。
+ */
+export function resolveJournalPath(dayStamp: string): string {
+  return join(app.getPath('userData'), JOURNAL_DIR, `${FILE_PREFIX}${dayStamp}${FILE_EXT}`);
+}
+
+// =============================================================================
+// Helpers (Private)
+// =============================================================================
+
+/**
+ * 确保日志目录存在。
+ */
+async function ensureJournalDir(): Promise<string> {
+  const dir = join(app.getPath('userData'), JOURNAL_DIR);
+  await fs.mkdir(dir, { recursive: true });
+  return dir;
+}
+
+/**
  * 写入日志数据。
  */
 async function persistDay(day: JournalDay): Promise<void> {
   await ensureJournalDir();
   const filePath = resolveJournalPath(day.date);
   await fs.writeFile(filePath, JSON.stringify(day, null, 2), 'utf-8');
-}
-
-/**
- * 生成日期戳，格式 YYYY-MM-DD。
- */
-export function getDayStamp(date: Date): string {
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }

@@ -9,33 +9,83 @@ import slimeTextureUrl from '../assets/slime/slime.png';
  * @file usePixiPet.ts
  * @description
  * 一个 Vue Composition API hook，用于封装 Pixi.js 宠物的渲染和动画逻辑。
+ * 支持加载默认史莱姆或自定义配置的资源（图片/SpriteSheet）。
  */
 
-/**
- * @interface UsePixiPetResult
- * @description `usePixiPet` hook 的返回值类型。
- * @property {Ref<number>} uiScale - UI 元素的响应式缩放比例。
- */
+// =============================================================================
+// Types & Interfaces
+// =============================================================================
+
 export interface UsePixiPetResult {
   uiScale: Ref<number>;
 }
 
+// =============================================================================
+// Resource Loading
+// =============================================================================
+
 /**
- * 加载史莱姆的 spritesheet。
- * @returns {Promise<Spritesheet>}
+ * 加载默认的史莱姆 AnimatedSprite。
  */
-async function loadSlimeSpritesheet(): Promise<Spritesheet> {
+async function loadDefaultSlime(): Promise<AnimatedSprite> {
   const texture = await Assets.load<Texture>(slimeTextureUrl);
   const sheet = new Spritesheet(texture, slimeSheetData as SpritesheetData);
   await sheet.parse();
-  return sheet;
+  const frames = Object.values(sheet.textures);
+  return new AnimatedSprite(frames);
 }
 
 /**
- * 管理 Pixi.js 宠物的渲染和动画。
- * @param {Ref<HTMLDivElement | null>} pixiContainer - 用于挂载 canvas 的 DOM 元素。
- * @returns {UsePixiPetResult}
+ * 加载自定义资源。
+ * @param theme 配置中的主题对象
  */
+async function loadCustomTheme(theme: { type: 'image' | 'spritesheet'; path: string }): Promise<AnimatedSprite | null> {
+  try {
+    if (theme.type === 'spritesheet') {
+      // 1. 读取 JSON 配置文件
+      const jsonB64 = await window.electronAPI.readResource(theme.path);
+      const jsonStr = new TextDecoder().decode(Uint8Array.from(atob(jsonB64), c => c.charCodeAt(0)));
+      const sheetData = JSON.parse(jsonStr);
+
+      // 2. 解析图片路径（假设图片在同一目录下）
+      // 简单处理路径分隔符
+      const separator = theme.path.includes('\\') ? '\\' : '/';
+      const dir = theme.path.substring(0, theme.path.lastIndexOf(separator));
+      const imageFilename = sheetData.meta.image;
+      const imagePath = `${dir}${separator}${imageFilename}`;
+
+      // 3. 读取图片资源
+      const imageB64 = await window.electronAPI.readResource(imagePath);
+      // 简单推断 mime type，默认为 png
+      const ext = imageFilename.split('.').pop()?.toLowerCase() || 'png';
+      const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png';
+      const texture = await Assets.load<Texture>(`data:${mime};base64,${imageB64}`);
+
+      // 4. 创建 Spritesheet
+      const sheet = new Spritesheet(texture, sheetData);
+      await sheet.parse();
+      const frames = Object.values(sheet.textures);
+      return new AnimatedSprite(frames);
+
+    } else if (theme.type === 'image') {
+      // 单张静态图
+      const imageB64 = await window.electronAPI.readResource(theme.path);
+      const ext = theme.path.split('.').pop()?.toLowerCase() || 'png';
+      const mime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png';
+      const texture = await Assets.load<Texture>(`data:${mime};base64,${imageB64}`);
+      return new AnimatedSprite([texture]);
+    }
+  } catch (error) {
+    console.error('Failed to load custom theme:', error);
+    return null;
+  }
+  return null;
+}
+
+// =============================================================================
+// Main Hook
+// =============================================================================
+
 export function usePixiPet(pixiContainer: Ref<HTMLDivElement | null>): UsePixiPetResult {
   let app: Application | null = null;
   let disposed = false;
@@ -57,18 +107,31 @@ export function usePixiPet(pixiContainer: Ref<HTMLDivElement | null>): UsePixiPe
     app = instance;
     instance.canvas.classList.add('w-full', 'h-full', 'block');
 
-    const spritesheet = await loadSlimeSpritesheet();
+    let slime: AnimatedSprite | null = null;
+
+    try {
+      const config = await window.electronAPI.getAppConfig();
+      const theme = config.mainWindow?.theme;
+
+      if (theme?.custom && theme.path) {
+        slime = await loadCustomTheme(theme);
+      }
+    } catch (e) {
+      console.warn('Config load failed or custom theme invalid, falling back.', e);
+    }
+
+    if (!slime) {
+      slime = await loadDefaultSlime();
+    }
 
     if (disposed || !app) {
       return;
     }
 
-    const frames = Object.values(spritesheet.textures);
-    const slime = new AnimatedSprite(frames);
     slime.anchor.set(0.5);
 
     const applyLayout = () => {
-      if (!app) return;
+      if (!app || !slime) return;
       const scaleX = app.screen.width / PET_WINDOW_BASE_SIZE.WIDTH;
       const scaleY = app.screen.height / PET_WINDOW_BASE_SIZE.HEIGHT;
       const uniform = Math.min(scaleX, scaleY);
@@ -78,7 +141,8 @@ export function usePixiPet(pixiContainer: Ref<HTMLDivElement | null>): UsePixiPe
     };
 
     applyLayout();
-    slime.animationSpeed = 0.03;
+    
+    slime.animationSpeed = 0.03; 
     slime.play();
 
     app.stage.addChild(slime);
