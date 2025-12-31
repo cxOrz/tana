@@ -39,12 +39,17 @@ async function loadDefaultSlime(): Promise<AnimatedSprite> {
  * 加载自定义资源。
  * @param theme 配置中的主题对象
  */
-async function loadCustomTheme(theme: { type: 'image' | 'spritesheet'; path: string }): Promise<AnimatedSprite | null> {
+async function loadCustomTheme(theme: {
+  type: 'image' | 'spritesheet';
+  path: string;
+}): Promise<AnimatedSprite | null> {
   try {
     if (theme.type === 'spritesheet') {
       // 1. 读取 JSON 配置文件
       const jsonB64 = await window.electronAPI.readResource(theme.path);
-      const jsonStr = new TextDecoder().decode(Uint8Array.from(atob(jsonB64), c => c.charCodeAt(0)));
+      const jsonStr = new TextDecoder().decode(
+        Uint8Array.from(atob(jsonB64), (c) => c.charCodeAt(0))
+      );
       const sheetData = JSON.parse(jsonStr);
 
       // 2. 解析图片路径（假设图片在同一目录下）
@@ -66,7 +71,6 @@ async function loadCustomTheme(theme: { type: 'image' | 'spritesheet'; path: str
       await sheet.parse();
       const frames = Object.values(sheet.textures);
       return new AnimatedSprite(frames);
-
     } else if (theme.type === 'image') {
       // 单张静态图
       const imageB64 = await window.electronAPI.readResource(theme.path);
@@ -141,8 +145,8 @@ export function usePixiPet(pixiContainer: Ref<HTMLDivElement | null>): UsePixiPe
     };
 
     applyLayout();
-    
-    slime.animationSpeed = 0.03; 
+
+    slime.animationSpeed = 0.03;
     slime.play();
 
     app.stage.addChild(slime);

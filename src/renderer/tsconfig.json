@@ -1,13 +1,19 @@
-// 渲染层 tsconfig
 {
-  "extends": ["../../tsconfig.base.json", "@vue/tsconfig/tsconfig.dom.json"],
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["env.d.ts", "**/*", "**/*.vue", "../shared/**/*"],
+  "exclude": ["**/__tests__/*", "node_modules"],
   "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "../../node_modules/.tmp/tsconfig.renderer.tsbuildinfo",
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
     "lib": ["ESNext", "DOM"],
     "isolatedModules": true,
-    "types": ["vite/client"],
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
-  },
-  "include": ["**/*", "../shared/**/*"]
+  }
 }

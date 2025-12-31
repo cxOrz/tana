@@ -33,7 +33,8 @@ const electronAPI = {
    * @param {string} path - 文件路径。
    * @returns {Promise<string>} Base64 字符串。
    */
-  readResource: (path: string): Promise<string> => ipcRenderer.invoke(IPC_CHANNELS.APP_READ_FILE, path),
+  readResource: (path: string): Promise<string> =>
+    ipcRenderer.invoke(IPC_CHANNELS.APP_READ_FILE, path),
 
   /**
    * 注册一个在应用即将隐藏时触发的回调。

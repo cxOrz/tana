@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { CalendarHeadingProps } from 'reka-ui';
-import type { HTMLAttributes } from 'vue';
+import type { HTMLAttributes, VNodeChild } from 'vue';
 import { reactiveOmit } from '@vueuse/core';
 import { CalendarHeading, useForwardProps } from 'reka-ui';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 const props = defineProps<CalendarHeadingProps & { class?: HTMLAttributes['class'] }>();
 
 defineSlots<{
-  default: (props: { headingValue: string }) => any;
+  default: (props: { headingValue: string }) => VNodeChild;
 }>();
 
 const delegatedProps = reactiveOmit(props, 'class');

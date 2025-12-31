@@ -1,14 +1,15 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "@tsconfig/node24/tsconfig.json",
   "compilerOptions": {
-    "lib": ["ES2022"],
-    "target": "esnext",
-    "moduleResolution": "nodenext",
-    "module": "nodenext",
+    "composite": true,
+    "tsBuildInfoFile": "../../node_modules/.tmp/tsconfig.main.tsbuildinfo",
     "outDir": "../../dist",
-    "noEmit": false,
-    "rootDir": ".."
+    "rootDir": "..",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/shared": ["../shared"]
+    }
   },
-  "include": ["**/*", "../shared/**/*"],
-  "exclude": ["../renderer", "../../node_modules", "../../dist"]
+  "include": ["**/*", "**/*.json", "../shared/**/*"]
 }

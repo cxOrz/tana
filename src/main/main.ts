@@ -1,4 +1,4 @@
-import { app, globalShortcut, nativeImage } from 'electron';
+import { app, nativeImage, globalShortcut } from 'electron';
 import { APP_USER_MODEL_ID, IPC_CHANNELS } from '../shared/constants';
 import { loadAppConfig } from './config';
 import type { AppConfig } from './config';
@@ -48,7 +48,7 @@ function initializeApp() {
   app.on('before-quit', onBeforeQuit);
   app.on('window-all-closed', onWindowAllClosed);
   app.on('activate', onActivate);
-  
+
   // 核心启动逻辑
   app.whenReady().then(onAppReady);
 }

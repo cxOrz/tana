@@ -93,7 +93,20 @@ function buildPrompt(day: JournalDay): string {
 
 function parseSummary(text: string): StructuredSummary {
   try {
-    const cleaned = text.replace(/```json|```/gi, '').trim();
+    let cleaned = text.trim();
+    // 尝试提取 markdown 代码块中的内容
+    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    if (codeBlockMatch && codeBlockMatch[1]) {
+      cleaned = codeBlockMatch[1].trim();
+    } else {
+      // 如果没有代码块，尝试寻找第一个 { 和最后一个 }
+      const firstBrace = text.indexOf('{');
+      const lastBrace = text.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleaned = text.substring(firstBrace, lastBrace + 1);
+      }
+    }
+
     const parsed = JSON.parse(cleaned) as StructuredSummary;
     const title = parsed.title?.trim();
     const description = parsed.description?.trim();

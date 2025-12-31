@@ -99,13 +99,20 @@ declare global {
   }
 }
 
-/**
- * 为 `.vue` 文件提供类型定义，以便 TypeScript 可以正确处理它们。
- */
-declare module '*.vue' {
-  import type { DefineComponent } from 'vue';
-  const component: DefineComponent<Record<string, unknown>, Record<string, unknown>, unknown>;
-  export default component;
+type DataAttributes = {
+  /**
+   * 允许在模板中使用 data-* 自定义属性。
+   */
+  [K in `data-${string}`]?: string | number | boolean | null | undefined;
+};
+
+declare module 'vue' {
+  interface HTMLAttributes extends DataAttributes {
+    /**
+     * 用于标注组件 slot 的 data 属性。
+     */
+    'data-slot'?: string | number | boolean | null | undefined;
+  }
 }
 
 export {};
